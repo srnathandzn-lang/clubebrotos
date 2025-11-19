@@ -811,7 +811,9 @@ const DashboardShell: React.FC = () => {
                     >
                         <MenuIcon />
                     </button>
-                    <div className="w-24 filter brightness-0 invert"><BrandLogo /></div>
+                    <div className="h-10 w-auto bg-white rounded-lg px-2 py-1 flex items-center justify-center">
+                        <BrandLogo className="h-8 w-auto" />
+                    </div>
                 </div>
                 
                 {/* Optional: Right side of header */}

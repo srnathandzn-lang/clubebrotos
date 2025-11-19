@@ -2,8 +2,9 @@
 import React from 'react';
 
 // Using the provided image URL for the logo
-export const BrandLogo = () => (
-    <img src="https://i.imgur.com/ntlcx07.png" alt="Brotos da Terra Logo" className="h-16 md:h-12 w-auto" />
+// Updated to accept className prop for flexible sizing
+export const BrandLogo = ({ className }: { className?: string }) => (
+    <img src="https://i.imgur.com/ntlcx07.png" alt="Brotos da Terra Logo" className={className || "h-16 md:h-12 w-auto"} />
 );
 
 export const LeafIcon = () => (
