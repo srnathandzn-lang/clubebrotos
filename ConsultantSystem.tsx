@@ -109,7 +109,7 @@ export const ConsultantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             
             setStats({
                 totalConsultants: data.length,
-                activeConsultants: data.length,
+                activeConsultants: data.length, // Simplificado para este exemplo
                 totalTeams: new Set(data.map(c => c.parent_id).filter(Boolean)).size,
                 newThisMonth: data.filter(c => new Date(c.created_at) >= startOfMonth).length
             });
@@ -746,7 +746,9 @@ const DashboardShell: React.FC = () => {
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-    const myTeam = user?.role === 'admin' 
+    const isAdmin = user?.role === 'admin';
+
+    const myTeam = isAdmin 
         ? consultants 
         : consultants.filter(c => c.parent_id === user?.id);
 
@@ -756,6 +758,7 @@ const DashboardShell: React.FC = () => {
     const distributorProgress = (currentBoxes / BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES) * 100;
 
     const handleOpenShop = () => {
+        if (isAdmin) return;
         setActiveTab('shop');
         setIsOrderOpen(true);
     };
@@ -777,21 +780,27 @@ const DashboardShell: React.FC = () => {
                         </div>
                     </div>
                     <div className="mt-3 px-3 py-1 bg-white/10 text-white/80 text-xs font-bold uppercase rounded border border-white/10 text-center shadow-sm">
-                        Nível: {user?.role === 'admin' ? 'Administrador' : user?.role === 'leader' ? 'Líder/Distribuidor' : 'Consultor'}
+                        Nível: {isAdmin ? 'Administrador' : user?.role === 'leader' ? 'Líder/Distribuidor' : 'Consultor'}
                     </div>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     <button onClick={() => setActiveTab('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
                         <ChartBarIcon /> Visão Geral
                     </button>
-                    <button onClick={() => setActiveTab('finance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'finance' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
-                        <BanknotesIcon /> Financeiro
-                    </button>
-                    <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
-                        <ShoppingCartIcon /> Fazer Pedido
-                    </button>
+                    
+                    {!isAdmin && (
+                        <>
+                            <button onClick={() => setActiveTab('finance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'finance' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                                <BanknotesIcon /> Financeiro
+                            </button>
+                            <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
+                                <ShoppingCartIcon /> Fazer Pedido
+                            </button>
+                        </>
+                    )}
+                    
                      <button onClick={() => setActiveTab('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
-                        <UsersIcon /> Minha Equipe
+                        <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
                     </button>
                     <div className="pt-4 mt-4 border-t border-white/10">
                         <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
@@ -810,82 +819,124 @@ const DashboardShell: React.FC = () => {
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
                         <header className="mb-8">
                             <h2 className="text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
-                            <p className="text-gray-500">Acompanhe o crescimento do seu negócio Brotos da Terra.</p>
+                            <p className="text-gray-500">
+                                {isAdmin 
+                                    ? "Visão geral administrativa do sistema Clube Brotos."
+                                    : "Acompanhe o crescimento do seu negócio Brotos da Terra."
+                                }
+                            </p>
                         </header>
 
-                        {/* Card de Carreira / Meta Distribuidor */}
-                        <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                            <div className="relative z-10">
-                                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
-                                    <TrendingUpIcon /> Plano de Carreira: Distribuidor
-                                </h3>
-                                <div className="flex flex-col md:flex-row gap-8 items-center">
-                                    <div className="flex-1 w-full">
-                                        <div className="flex justify-between text-xs uppercase font-bold mb-2 opacity-80">
-                                            <span>Consultor (Atual)</span>
-                                            <span>Meta: {BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES} Caixas</span>
-                                        </div>
-                                        <div className="w-full bg-gray-600 h-4 rounded-full overflow-hidden border border-gray-500">
-                                            <div className="bg-yellow-400 h-full shadow-[0_0_10px_rgba(250,204,21,0.5)]" style={{width: `${distributorProgress}%`}}></div>
-                                        </div>
-                                        <p className="text-xs mt-2 text-gray-300">Adquira 50 caixas para se tornar um Distribuidor oficial e liderar sua rede.</p>
+                        {/* VISÃO DO ADMINISTRADOR */}
+                        {isAdmin ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><UsersIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Total</span>
                                     </div>
-                                    <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[200px]">
-                                        <p className="text-xs text-gray-300 uppercase mb-1">Preço Exclusivo</p>
-                                        <p className="text-2xl font-bold text-yellow-400">R$ 210,00</p>
-                                        <p className="text-xs text-gray-300">por caixa (12un)</p>
+                                    <h3 className="text-gray-500 font-medium text-sm">Consultores Cadastrados</h3>
+                                    <p className="text-4xl font-bold text-gray-800 mt-1">{stats.totalConsultants}</p>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-green-50 text-green-600 rounded-xl"><PlusIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Este Mês</span>
                                     </div>
+                                    <h3 className="text-gray-500 font-medium text-sm">Novos Cadastros</h3>
+                                    <p className="text-4xl font-bold text-gray-800 mt-1">{stats.newThisMonth}</p>
                                 </div>
-                            </div>
-                            {/* Decorative background elements */}
-                            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div onClick={() => setActiveTab('finance')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-100 transition-colors"><BanknotesIcon /></div>
-                                    <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Ver Detalhes</span>
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><UserCircleIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Rede</span>
+                                    </div>
+                                    <h3 className="text-gray-500 font-medium text-sm">Líderes / Equipes</h3>
+                                    <p className="text-4xl font-bold text-gray-800 mt-1">{stats.totalTeams}</p>
                                 </div>
-                                <h3 className="text-gray-500 font-medium text-sm">Lucro Estimado</h3>
-                                <p className="text-4xl font-bold text-gray-800 mt-1">R$ 3.360</p>
-                                <p className="text-xs text-green-600 mt-2">Com base no histórico</p>
                             </div>
-                            
-                            <div onClick={() => setActiveTab('team')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors"><UsersIcon /></div>
-                                    <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Gerenciar</span>
-                                </div>
-                                <h3 className="text-gray-500 font-medium text-sm">Minha Equipe</h3>
-                                <p className="text-4xl font-bold text-gray-800 mt-1">{myTeam.length}</p>
-                            </div>
-
-                            <div onClick={handleOpenShop} className="bg-brand-green-dark text-white p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
+                        ) : (
+                        /* VISÃO DO CONSULTOR */
+                        <>
+                            {/* Card de Carreira / Meta Distribuidor */}
+                            <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                                 <div className="relative z-10">
-                                    <h3 className="font-bold text-xl mb-1">Fazer Pedido</h3>
-                                    <p className="text-white/70 text-sm mb-4">Reabasteça seu estoque com preço de atacado.</p>
-                                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg font-bold text-sm group-hover:bg-white/30 transition-all">
-                                        <ShoppingCartIcon /> Comprar Agora
+                                    <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                                        <TrendingUpIcon /> Plano de Carreira: Distribuidor
+                                    </h3>
+                                    <div className="flex flex-col md:flex-row gap-8 items-center">
+                                        <div className="flex-1 w-full">
+                                            <div className="flex justify-between text-xs uppercase font-bold mb-2 opacity-80">
+                                                <span>Consultor (Atual)</span>
+                                                <span>Meta: {BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES} Caixas</span>
+                                            </div>
+                                            <div className="w-full bg-gray-600 h-4 rounded-full overflow-hidden border border-gray-500">
+                                                <div className="bg-yellow-400 h-full shadow-[0_0_10px_rgba(250,204,21,0.5)]" style={{width: `${distributorProgress}%`}}></div>
+                                            </div>
+                                            <p className="text-xs mt-2 text-gray-300">Adquira 50 caixas para se tornar um Distribuidor oficial e liderar sua rede.</p>
+                                        </div>
+                                        <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[200px]">
+                                            <p className="text-xs text-gray-300 uppercase mb-1">Preço Exclusivo</p>
+                                            <p className="text-2xl font-bold text-yellow-400">R$ 210,00</p>
+                                            <p className="text-xs text-gray-300">por caixa (12un)</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="absolute -bottom-4 -right-4 text-white/10 transform group-hover:scale-110 transition-transform duration-500">
-                                    <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                {/* Decorative background elements */}
+                                <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+                                <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div onClick={() => setActiveTab('finance')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-100 transition-colors"><BanknotesIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Ver Detalhes</span>
+                                    </div>
+                                    <h3 className="text-gray-500 font-medium text-sm">Lucro Estimado</h3>
+                                    <p className="text-4xl font-bold text-gray-800 mt-1">R$ 3.360</p>
+                                    <p className="text-xs text-green-600 mt-2">Com base no histórico</p>
+                                </div>
+                                
+                                <div onClick={() => setActiveTab('team')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors"><UsersIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Gerenciar</span>
+                                    </div>
+                                    <h3 className="text-gray-500 font-medium text-sm">Minha Equipe</h3>
+                                    <p className="text-4xl font-bold text-gray-800 mt-1">{myTeam.length}</p>
+                                </div>
+
+                                <div onClick={handleOpenShop} className="bg-brand-green-dark text-white p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
+                                    <div className="relative z-10">
+                                        <h3 className="font-bold text-xl mb-1">Fazer Pedido</h3>
+                                        <p className="text-white/70 text-sm mb-4">Reabasteça seu estoque com preço de atacado.</p>
+                                        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg font-bold text-sm group-hover:bg-white/30 transition-all">
+                                            <ShoppingCartIcon /> Comprar Agora
+                                        </div>
+                                    </div>
+                                    <div className="absolute -bottom-4 -right-4 text-white/10 transform group-hover:scale-110 transition-transform duration-500">
+                                        <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </>
+                        )}
                     </div>
                 )}
 
-                {activeTab === 'finance' && <FinancialScreen />}
+                {activeTab === 'finance' && !isAdmin && <FinancialScreen />}
 
                 {activeTab === 'team' && (
                     <div className="max-w-5xl mx-auto animate-fade-in">
                          <div className="flex justify-between items-center mb-6">
-                             <h2 className="text-2xl font-bold text-gray-800">Gestão de Equipe</h2>
+                             <h2 className="text-2xl font-bold text-gray-800">
+                                 {isAdmin ? 'Administração de Consultores' : 'Gestão de Equipe'}
+                             </h2>
                              <button onClick={() => setIsInviteOpen(true)} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition">
-                                 <PlusIcon /> Novo Membro
+                                 <PlusIcon /> {isAdmin ? 'Novo Consultor' : 'Novo Membro'}
                              </button>
                          </div>
                         
@@ -898,12 +949,13 @@ const DashboardShell: React.FC = () => {
                                             <th className="p-5">ID</th>
                                             <th className="p-5">Contato</th>
                                             <th className="p-5">Localização</th>
+                                            {isAdmin && <th className="p-5">Líder (ID)</th>}
                                             <th className="p-5">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {myTeam.length === 0 ? (
-                                            <tr><td colSpan={5} className="p-12 text-center text-gray-500">Nenhum consultor na sua rede ainda.</td></tr>
+                                            <tr><td colSpan={isAdmin ? 6 : 5} className="p-12 text-center text-gray-500">Nenhum consultor encontrado.</td></tr>
                                         ) : (
                                             myTeam.map(c => (
                                                 <tr key={c.id} className="hover:bg-gray-50 transition-colors">
@@ -920,6 +972,11 @@ const DashboardShell: React.FC = () => {
                                                         </a>
                                                     </td>
                                                     <td className="p-5 text-sm text-gray-500">{c.address}</td>
+                                                    {isAdmin && (
+                                                        <td className="p-5 text-sm text-gray-500">
+                                                            {c.parent_id === '000000' ? 'Direto' : c.parent_id || '-'}
+                                                        </td>
+                                                    )}
                                                     <td className="p-5"><span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full">Ativo</span></td>
                                                 </tr>
                                             ))
@@ -931,7 +988,7 @@ const DashboardShell: React.FC = () => {
                     </div>
                 )}
 
-                {activeTab === 'shop' && (
+                {activeTab === 'shop' && !isAdmin && (
                     <div className="max-w-5xl mx-auto animate-fade-in">
                         <h2 className="text-2xl font-bold text-gray-800 mb-6">Catálogo do Consultor</h2>
                         <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
