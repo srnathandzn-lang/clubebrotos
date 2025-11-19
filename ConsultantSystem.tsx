@@ -745,7 +745,7 @@ const DashboardShell: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'finance'>('home');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const isAdmin = user?.role === 'admin';
 
@@ -783,49 +783,61 @@ const DashboardShell: React.FC = () => {
         if (isAdmin) return;
         setActiveTab('shop');
         setIsOrderOpen(true);
-        setIsMobileMenuOpen(false);
+        setIsSidebarOpen(false);
     };
 
     const handleNav = (tab: typeof activeTab) => {
         setActiveTab(tab);
-        setIsMobileMenuOpen(false);
+        setIsSidebarOpen(false);
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans relative">
+        <div className="min-h-screen bg-gray-100 flex flex-col font-sans relative">
             
-            {/* Mobile Overlay for Menu */}
-            {isMobileMenuOpen && (
+            {/* Overlay for Menu (Visible on all screens when open) */}
+            {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity duration-300"
+                    onClick={() => setIsSidebarOpen(false)}
                 ></div>
             )}
 
-            {/* Mobile Header */}
-            <div className="md:hidden bg-brand-green-dark text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
-                <div className="w-24 filter brightness-0 invert"><BrandLogo /></div>
-                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
-                    <MenuIcon />
-                </button>
+            {/* Universal Header (Visible on all screens) */}
+            <div className="bg-brand-green-dark text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
+                 <div className="flex items-center gap-4">
+                    <button 
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                        <MenuIcon />
+                    </button>
+                    <div className="w-24 filter brightness-0 invert"><BrandLogo /></div>
+                </div>
+                
+                {/* Optional: Right side of header */}
+                <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 rounded-full bg-brand-earth text-brand-green-dark flex items-center justify-center font-bold shadow-inner text-sm">
+                        {user?.name?.charAt(0)}
+                    </div>
+                </div>
             </div>
 
-            {/* Sidebar Navigation */}
+            {/* Sidebar Navigation (Off-canvas Drawer) */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
-                md:relative md:translate-x-0
-                ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+                fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark text-white flex flex-col shadow-2xl 
+                transform transition-transform duration-300 ease-in-out
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
-                 {/* Close Button Mobile */}
+                 {/* Close Button */}
                  <button 
-                    onClick={() => setIsMobileMenuOpen(false)} 
-                    className="absolute top-4 right-4 p-2 text-white md:hidden"
+                    onClick={() => setIsSidebarOpen(false)} 
+                    className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
                     <CloseIcon />
                 </button>
 
                 <div className="p-6 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
-                    <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center gap-3 mb-6 mt-2">
                         <div className="p-2 bg-white rounded-lg shadow-lg w-full flex justify-center"><BrandLogo /></div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl backdrop-blur-sm border border-white/10">
@@ -862,7 +874,7 @@ const DashboardShell: React.FC = () => {
                     </button>
                     <div className="pt-4 mt-4 border-t border-white/10">
                         <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
-                        <button onClick={() => {setIsInviteOpen(true); setIsMobileMenuOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
+                        <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
                             <PlusIcon /> Convidar Consultor
                         </button>
                     </div>
@@ -872,7 +884,7 @@ const DashboardShell: React.FC = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 p-4 md:p-10 overflow-y-auto h-[calc(100vh-64px)] md:h-screen">
+            <main className="flex-1 p-4 md:p-10 overflow-y-auto">
                 {activeTab === 'home' && (
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
                         <header className="mb-4 md:mb-8">
@@ -1094,7 +1106,7 @@ const DashboardShell: React.FC = () => {
                              <h2 className="text-2xl font-bold text-gray-800">
                                  {isAdmin ? 'Administração de Consultores' : 'Gestão de Equipe'}
                              </h2>
-                             <button onClick={() => {setIsInviteOpen(true); setIsMobileMenuOpen(false);}} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition w-full md:w-auto justify-center">
+                             <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition w-full md:w-auto justify-center">
                                  <PlusIcon /> {isAdmin ? 'Novo Consultor' : 'Novo Membro'}
                              </button>
                          </div>
