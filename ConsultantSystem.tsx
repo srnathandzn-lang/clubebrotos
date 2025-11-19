@@ -757,6 +757,27 @@ const DashboardShell: React.FC = () => {
     const currentBoxes = 0; 
     const distributorProgress = (currentBoxes / BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES) * 100;
 
+    // Lógica de Dashboard Administrativo
+    const topRecruiters = isAdmin ? React.useMemo(() => {
+        const counts: Record<string, number> = {};
+        consultants.forEach(c => {
+            if(c.parent_id && c.parent_id !== '000000') {
+                counts[c.parent_id] = (counts[c.parent_id] || 0) + 1;
+            }
+        });
+        return Object.entries(counts)
+            .map(([id, count]) => {
+                const leader = consultants.find(c => c.id === id);
+                return { id, name: leader?.name || 'Desconhecido', count };
+            })
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5); // Top 5
+    }, [consultants]) : [];
+
+    const recentSignups = isAdmin ? consultants
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5) : [];
+
     const handleOpenShop = () => {
         if (isAdmin) return;
         setActiveTab('shop');
@@ -821,7 +842,7 @@ const DashboardShell: React.FC = () => {
                             <h2 className="text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
                             <p className="text-gray-500">
                                 {isAdmin 
-                                    ? "Visão geral administrativa do sistema Clube Brotos."
+                                    ? "Visão geral e monitoramento do sistema Brotos da Terra."
                                     : "Acompanhe o crescimento do seu negócio Brotos da Terra."
                                 }
                             </p>
@@ -829,32 +850,133 @@ const DashboardShell: React.FC = () => {
 
                         {/* VISÃO DO ADMINISTRADOR */}
                         {isAdmin ? (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><UsersIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Total</span>
+                            <div className="space-y-8">
+                                {/* 1. Cards de KPI (Key Performance Indicators) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><UsersIcon /></div>
+                                            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded flex items-center gap-1"><TrendingUpIcon /> Total</span>
+                                        </div>
+                                        <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Total Consultores</h3>
+                                        <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalConsultants}</p>
                                     </div>
-                                    <h3 className="text-gray-500 font-medium text-sm">Consultores Cadastrados</h3>
-                                    <p className="text-4xl font-bold text-gray-800 mt-1">{stats.totalConsultants}</p>
+
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="p-3 bg-green-50 text-green-600 rounded-xl"><PlusIcon /></div>
+                                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">Mensal</span>
+                                        </div>
+                                        <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Novos em {new Date().toLocaleString('default', { month: 'long' })}</h3>
+                                        <p className="text-3xl font-bold text-gray-800 mt-1">{stats.newThisMonth}</p>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><UserCircleIcon /></div>
+                                            <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">Ativos</span>
+                                        </div>
+                                        <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Líderes de Equipe</h3>
+                                        <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalTeams}</p>
+                                    </div>
+
+                                    <div className="bg-gradient-to-br from-brand-green-dark to-green-800 p-6 rounded-2xl shadow-lg text-white">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="p-3 bg-white/20 rounded-xl"><BanknotesIcon /></div>
+                                        </div>
+                                        <h3 className="text-white/70 font-medium text-sm uppercase tracking-wider">Faturamento Rede (Est.)</h3>
+                                        <p className="text-3xl font-bold mt-1">R$ {(stats.totalConsultants * 210).toLocaleString('pt-BR')}</p>
+                                        <p className="text-[10px] opacity-60 mt-2">Baseado em média de 1 cx/ativo</p>
+                                    </div>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-green-50 text-green-600 rounded-xl"><PlusIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Este Mês</span>
-                                    </div>
-                                    <h3 className="text-gray-500 font-medium text-sm">Novos Cadastros</h3>
-                                    <p className="text-4xl font-bold text-gray-800 mt-1">{stats.newThisMonth}</p>
-                                </div>
+                                {/* 2. Seção de Dados Detalhados */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Coluna Esquerda: Ranking e Gráfico (Visual) */}
+                                    <div className="lg:col-span-2 space-y-6">
+                                        {/* Tabela de Últimos Cadastros */}
+                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                                                <h3 className="font-bold text-gray-800 flex items-center gap-2"><CalendarIcon /> Últimos Cadastros</h3>
+                                                <button onClick={() => setActiveTab('team')} className="text-sm text-brand-green-dark hover:underline">Ver todos</button>
+                                            </div>
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-gray-50 text-gray-500 font-bold uppercase">
+                                                        <tr>
+                                                            <th className="p-4">Nome</th>
+                                                            <th className="p-4">ID</th>
+                                                            <th className="p-4">Data</th>
+                                                            <th className="p-4">Cidade</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                        {recentSignups.map(c => (
+                                                            <tr key={c.id} className="hover:bg-gray-50">
+                                                                <td className="p-4 font-medium text-gray-800">{c.name}</td>
+                                                                <td className="p-4 text-gray-500 font-mono">{c.id}</td>
+                                                                <td className="p-4 text-gray-500">{new Date(c.created_at).toLocaleDateString()}</td>
+                                                                <td className="p-4 text-gray-500 truncate max-w-[150px]">{c.address?.split('-')[1] || 'N/A'}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
 
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><UserCircleIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Rede</span>
+                                        {/* Gráfico Simulado de Crescimento */}
+                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><PresentationChartLineIcon /> Crescimento da Rede (Semestral)</h3>
+                                            <div className="h-48 flex items-end justify-between gap-2 px-2">
+                                                {[35, 45, 40, 60, 75, 90].map((height, i) => (
+                                                    <div key={i} className="w-full flex flex-col items-center gap-2 group">
+                                                        <div 
+                                                            className="w-full bg-green-100 rounded-t-lg group-hover:bg-brand-green-dark transition-all duration-500 relative" 
+                                                            style={{height: `${height}%`}}
+                                                        >
+                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                {height * 2}
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-xs text-gray-400 font-bold uppercase">
+                                                            {['Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov'][i]}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h3 className="text-gray-500 font-medium text-sm">Líderes / Equipes</h3>
-                                    <p className="text-4xl font-bold text-gray-800 mt-1">{stats.totalTeams}</p>
+
+                                    {/* Coluna Direita: Top Líderes */}
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-fit">
+                                        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-white">
+                                            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-yellow-700">
+                                                <SparklesIcon /> Top Recrutadores
+                                            </h3>
+                                        </div>
+                                        <div className="p-2">
+                                            {topRecruiters.length > 0 ? topRecruiters.map((leader, idx) => (
+                                                <div key={leader.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-xl transition-colors border-b border-gray-50 last:border-0">
+                                                    <div className={`
+                                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                                                        ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : idx === 1 ? 'bg-gray-200 text-gray-600' : idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-400'}
+                                                    `}>
+                                                        {idx + 1}º
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-bold text-gray-800 text-sm truncate">{leader.name}</p>
+                                                        <p className="text-xs text-gray-400">ID: {leader.id}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-bold text-brand-green-dark">{leader.count}</p>
+                                                        <p className="text-[10px] text-gray-400 uppercase">Indicados</p>
+                                                    </div>
+                                                </div>
+                                            )) : (
+                                                <div className="p-8 text-center text-gray-400 text-sm">Nenhum dado de recrutamento ainda.</div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
