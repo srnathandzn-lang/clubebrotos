@@ -7,7 +7,7 @@ import {
   SearchIcon, PlusIcon, WhatsAppIcon, LocationIcon, CloseIcon,
   SparklesIcon, ShieldCheckIcon, ShoppingCartIcon,
   PackageIcon, TruckIcon, TrendingUpIcon,
-  BanknotesIcon, PresentationChartLineIcon, CalendarIcon
+  BanknotesIcon, PresentationChartLineIcon, CalendarIcon, MenuIcon
 } from './components/Icons';
 
 // --- 1. Regras de Negócio ---
@@ -503,12 +503,12 @@ const FinancialScreen: React.FC = () => {
 
     return (
         <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
-            <header className="mb-8 flex justify-between items-end">
+            <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Painel Financeiro</h2>
-                    <p className="text-gray-500">Acompanhe o rendimento do seu negócio.</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Painel Financeiro</h2>
+                    <p className="text-gray-500 text-sm md:text-base">Acompanhe o rendimento do seu negócio.</p>
                 </div>
-                <div className="bg-green-100 text-brand-green-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                <div className="bg-green-100 text-brand-green-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 w-full md:w-auto justify-center">
                     <TrendingUpIcon /> Lucro de 100% na revenda
                 </div>
             </header>
@@ -551,12 +551,12 @@ const FinancialScreen: React.FC = () => {
 
             {/* Tabela de Histórico */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h3 className="font-bold text-gray-800">Histórico de Pedidos</h3>
                     <button className="text-sm text-brand-green-dark hover:underline font-medium">Exportar Relatório</button>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="w-full text-left min-w-[600px]">
                         <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
                             <tr>
                                 <th className="p-5">Data</th>
@@ -745,6 +745,7 @@ const DashboardShell: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'finance'>('home');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const isAdmin = user?.role === 'admin';
 
@@ -782,17 +783,53 @@ const DashboardShell: React.FC = () => {
         if (isAdmin) return;
         setActiveTab('shop');
         setIsOrderOpen(true);
+        setIsMobileMenuOpen(false);
+    };
+
+    const handleNav = (tab: typeof activeTab) => {
+        setActiveTab(tab);
+        setIsMobileMenuOpen(false);
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans">
-            <aside className="bg-brand-green-dark text-white w-full md:w-72 flex-shrink-0 flex flex-col shadow-2xl z-10">
+        <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans relative">
+            
+            {/* Mobile Overlay for Menu */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                ></div>
+            )}
+
+            {/* Mobile Header */}
+            <div className="md:hidden bg-brand-green-dark text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
+                <div className="w-24 filter brightness-0 invert"><BrandLogo /></div>
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
+                    <MenuIcon />
+                </button>
+            </div>
+
+            {/* Sidebar Navigation */}
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark text-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
+                md:relative md:translate-x-0
+                ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                 {/* Close Button Mobile */}
+                 <button 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className="absolute top-4 right-4 p-2 text-white md:hidden"
+                >
+                    <CloseIcon />
+                </button>
+
                 <div className="p-6 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
                     <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-white rounded-lg shadow-lg"><BrandLogo /></div>
+                        <div className="p-2 bg-white rounded-lg shadow-lg w-full flex justify-center"><BrandLogo /></div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl backdrop-blur-sm border border-white/10">
-                        <div className="w-10 h-10 rounded-full bg-brand-earth text-brand-green-dark flex items-center justify-center font-bold shadow-inner">
+                        <div className="w-10 h-10 rounded-full bg-brand-earth text-brand-green-dark flex items-center justify-center font-bold shadow-inner flex-shrink-0">
                             {user?.name?.charAt(0)}
                         </div>
                         <div className="overflow-hidden">
@@ -805,13 +842,13 @@ const DashboardShell: React.FC = () => {
                     </div>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <button onClick={() => setActiveTab('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                    <button onClick={() => handleNav('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
                         <ChartBarIcon /> Visão Geral
                     </button>
                     
                     {!isAdmin && (
                         <>
-                            <button onClick={() => setActiveTab('finance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'finance' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                            <button onClick={() => handleNav('finance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'finance' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
                                 <BanknotesIcon /> Financeiro
                             </button>
                             <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
@@ -820,12 +857,12 @@ const DashboardShell: React.FC = () => {
                         </>
                     )}
                     
-                     <button onClick={() => setActiveTab('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                     <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
                         <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
                     </button>
                     <div className="pt-4 mt-4 border-t border-white/10">
                         <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
-                        <button onClick={() => setIsInviteOpen(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
+                        <button onClick={() => {setIsInviteOpen(true); setIsMobileMenuOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
                             <PlusIcon /> Convidar Consultor
                         </button>
                     </div>
@@ -835,12 +872,12 @@ const DashboardShell: React.FC = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 p-6 md:p-10 overflow-y-auto h-screen">
+            <main className="flex-1 p-4 md:p-10 overflow-y-auto h-[calc(100vh-64px)] md:h-screen">
                 {activeTab === 'home' && (
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
-                        <header className="mb-8">
-                            <h2 className="text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
-                            <p className="text-gray-500">
+                        <header className="mb-4 md:mb-8">
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
+                            <p className="text-gray-500 text-sm md:text-base">
                                 {isAdmin 
                                     ? "Visão geral e monitoramento do sistema Brotos da Terra."
                                     : "Acompanhe o crescimento do seu negócio Brotos da Terra."
@@ -852,7 +889,7 @@ const DashboardShell: React.FC = () => {
                         {isAdmin ? (
                             <div className="space-y-8">
                                 {/* 1. Cards de KPI (Key Performance Indicators) */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><UsersIcon /></div>
@@ -897,11 +934,11 @@ const DashboardShell: React.FC = () => {
                                         {/* Tabela de Últimos Cadastros */}
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                                             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                                                <h3 className="font-bold text-gray-800 flex items-center gap-2"><CalendarIcon /> Últimos Cadastros</h3>
+                                                <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm md:text-base"><CalendarIcon /> Últimos Cadastros</h3>
                                                 <button onClick={() => setActiveTab('team')} className="text-sm text-brand-green-dark hover:underline">Ver todos</button>
                                             </div>
                                             <div className="overflow-x-auto">
-                                                <table className="w-full text-left text-sm">
+                                                <table className="w-full text-left text-sm min-w-[500px]">
                                                     <thead className="bg-gray-50 text-gray-500 font-bold uppercase">
                                                         <tr>
                                                             <th className="p-4">Nome</th>
@@ -926,7 +963,7 @@ const DashboardShell: React.FC = () => {
 
                                         {/* Gráfico Simulado de Crescimento */}
                                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2"><PresentationChartLineIcon /> Crescimento da Rede (Semestral)</h3>
+                                            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2 text-sm md:text-base"><PresentationChartLineIcon /> Crescimento da Rede (Semestral)</h3>
                                             <div className="h-48 flex items-end justify-between gap-2 px-2">
                                                 {[35, 45, 40, 60, 75, 90].map((height, i) => (
                                                     <div key={i} className="w-full flex flex-col items-center gap-2 group">
@@ -950,7 +987,7 @@ const DashboardShell: React.FC = () => {
                                     {/* Coluna Direita: Top Líderes */}
                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-fit">
                                         <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-white">
-                                            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-yellow-700">
+                                            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-yellow-700 text-sm md:text-base">
                                                 <SparklesIcon /> Top Recrutadores
                                             </h3>
                                         </div>
@@ -958,7 +995,7 @@ const DashboardShell: React.FC = () => {
                                             {topRecruiters.length > 0 ? topRecruiters.map((leader, idx) => (
                                                 <div key={leader.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-xl transition-colors border-b border-gray-50 last:border-0">
                                                     <div className={`
-                                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0
                                                         ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : idx === 1 ? 'bg-gray-200 text-gray-600' : idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-400'}
                                                     `}>
                                                         {idx + 1}º
@@ -967,7 +1004,7 @@ const DashboardShell: React.FC = () => {
                                                         <p className="font-bold text-gray-800 text-sm truncate">{leader.name}</p>
                                                         <p className="text-xs text-gray-400">ID: {leader.id}</p>
                                                     </div>
-                                                    <div className="text-right">
+                                                    <div className="text-right shrink-0">
                                                         <p className="font-bold text-brand-green-dark">{leader.count}</p>
                                                         <p className="text-[10px] text-gray-400 uppercase">Indicados</p>
                                                     </div>
@@ -999,7 +1036,7 @@ const DashboardShell: React.FC = () => {
                                             </div>
                                             <p className="text-xs mt-2 text-gray-300">Adquira 50 caixas para se tornar um Distribuidor oficial e liderar sua rede.</p>
                                         </div>
-                                        <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[200px]">
+                                        <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[200px] w-full md:w-auto mt-4 md:mt-0 text-center md:text-left">
                                             <p className="text-xs text-gray-300 uppercase mb-1">Preço Exclusivo</p>
                                             <p className="text-2xl font-bold text-yellow-400">R$ 210,00</p>
                                             <p className="text-xs text-gray-300">por caixa (12un)</p>
@@ -1053,18 +1090,18 @@ const DashboardShell: React.FC = () => {
 
                 {activeTab === 'team' && (
                     <div className="max-w-5xl mx-auto animate-fade-in">
-                         <div className="flex justify-between items-center mb-6">
+                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                              <h2 className="text-2xl font-bold text-gray-800">
                                  {isAdmin ? 'Administração de Consultores' : 'Gestão de Equipe'}
                              </h2>
-                             <button onClick={() => setIsInviteOpen(true)} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition">
+                             <button onClick={() => {setIsInviteOpen(true); setIsMobileMenuOpen(false);}} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition w-full md:w-auto justify-center">
                                  <PlusIcon /> {isAdmin ? 'Novo Consultor' : 'Novo Membro'}
                              </button>
                          </div>
                         
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                                <table className="w-full text-left min-w-[800px]">
                                     <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
                                         <tr>
                                             <th className="p-5">Consultor</th>
@@ -1113,30 +1150,30 @@ const DashboardShell: React.FC = () => {
                 {activeTab === 'shop' && !isAdmin && (
                     <div className="max-w-5xl mx-auto animate-fade-in">
                         <h2 className="text-2xl font-bold text-gray-800 mb-6">Catálogo do Consultor</h2>
-                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
+                        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
                             <div className="w-full md:w-1/3 bg-gray-50 rounded-xl p-8 aspect-square flex items-center justify-center">
                                  <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full object-contain mix-blend-multiply hover:scale-105 transition-transform duration-300" />
                             </div>
                             <div className="w-full md:w-2/3">
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-3 mb-2 flex-wrap">
                                     <span className="bg-brand-green-dark text-white text-xs font-bold px-2 py-1 rounded uppercase">Carro Chefe</span>
                                     <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase">Margem Alta</span>
                                 </div>
-                                <h3 className="text-3xl font-bold text-gray-800 mb-2">Caixa Display - Pomada de Copaíba</h3>
-                                <p className="text-gray-500 mb-6 leading-relaxed">
+                                <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Caixa Display - Pomada de Copaíba</h3>
+                                <p className="text-gray-500 mb-6 leading-relaxed text-sm md:text-base">
                                     O produto campeão de vendas. Caixa display pronta para exposição no balcão, contendo 12 unidades da autêntica Pomada de Copaíba Brotos da Terra. Alívio imediato e fidelização garantida.
                                 </p>
                                 
                                 <div className="grid grid-cols-2 gap-4 mb-6">
                                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                                         <p className="text-xs text-gray-500 uppercase font-bold">Você Paga</p>
-                                        <p className="text-2xl font-bold text-brand-green-dark">R$ 210,00</p>
-                                        <p className="text-xs text-gray-400">R$ 17,50 / unidade</p>
+                                        <p className="text-xl md:text-2xl font-bold text-brand-green-dark">R$ 210,00</p>
+                                        <p className="text-[10px] md:text-xs text-gray-400">R$ 17,50 / unidade</p>
                                     </div>
                                     <div className="bg-green-50 p-4 rounded-xl border border-green-100">
                                         <p className="text-xs text-green-600 uppercase font-bold">Preço Sugerido</p>
-                                        <p className="text-2xl font-bold text-green-700">R$ 420,00</p>
-                                        <p className="text-xs text-green-600">R$ 35,00 / unidade</p>
+                                        <p className="text-xl md:text-2xl font-bold text-green-700">R$ 420,00</p>
+                                        <p className="text-[10px] md:text-xs text-green-600">R$ 35,00 / unidade</p>
                                     </div>
                                 </div>
 
