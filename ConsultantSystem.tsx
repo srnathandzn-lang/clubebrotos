@@ -5,10 +5,21 @@ import type { Consultant, ConsultantRole, ConsultantStats } from './types';
 import { 
   BrandLogo, UsersIcon, ChartBarIcon, UserCircleIcon, LogoutIcon, 
   SearchIcon, PlusIcon, WhatsAppIcon, LocationIcon, CloseIcon,
-  SparklesIcon, ShieldCheckIcon, ShoppingCartIcon
+  SparklesIcon, ShieldCheckIcon, ShoppingCartIcon,
+  PackageIcon, TruckIcon, TrendingUpIcon,
+  BanknotesIcon, PresentationChartLineIcon, CalendarIcon
 } from './components/Icons';
 
-// --- 1. Lógica Auxiliar ---
+// --- 1. Regras de Negócio ---
+const BUSINESS_RULES = {
+    BOX_PRICE: 210.00,
+    UNITS_PER_BOX: 12,
+    RETAIL_PRICE_PER_UNIT: 35.00, // Preço sugerido de venda por pomada
+    FREE_SHIPPING_THRESHOLD: 4, // Em caixas
+    DISTRIBUTOR_TARGET_BOXES: 50,
+};
+
+// --- 2. Lógica Auxiliar ---
 
 const generateNewID = async (referrerId?: string): Promise<string> => {
     const prefix = referrerId === '000000' ? '00' : '01';
@@ -43,7 +54,7 @@ const generateNewID = async (referrerId?: string): Promise<string> => {
     return newId;
 };
 
-// --- 2. Contexto do Sistema ---
+// --- 3. Contexto do Sistema ---
 
 interface ConsultantContextType {
     user: Consultant | null;
@@ -149,7 +160,7 @@ const useConsultant = () => {
     return context;
 };
 
-// --- 3. Componentes de Interface ---
+// --- 4. Componentes de Interface ---
 
 const RegisterScreen: React.FC<{ referrerId: string; onBack?: () => void }> = ({ referrerId, onBack }) => {
     const [formData, setFormData] = useState({
@@ -186,7 +197,6 @@ const RegisterScreen: React.FC<{ referrerId: string; onBack?: () => void }> = ({
             if (!authData.user) throw new Error("Erro fatal: Usuário de autenticação não criado.");
 
             // 3. Criar registro no Banco de Dados
-            // OBS: Isso requer que as políticas RLS estejam configuradas corretamente no SQL.
             const { error: dbError } = await supabase
                 .from('consultants')
                 .insert([{
@@ -212,7 +222,6 @@ const RegisterScreen: React.FC<{ referrerId: string; onBack?: () => void }> = ({
                 password: formData.password
             });
             
-            // Recarrega a página para limpar estados
             window.location.href = '/';
 
         } catch (err: any) {
@@ -307,6 +316,13 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [placeholderId, setPlaceholderId] = useState("Ex: 014823");
+
+    useEffect(() => {
+        // Gera um exemplo de ID aleatório para o placeholder para parecer mais dinâmico
+        const randomNum = Math.floor(Math.random() * 9000) + 1000;
+        setPlaceholderId(`Ex: 01${randomNum}`);
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -314,7 +330,6 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
         setError('');
         
         try {
-            // 1. Buscar Email através do ID na tabela 'consultants'
             const { data, error: dbError } = await supabase
                 .from('consultants')
                 .select('email')
@@ -322,16 +337,15 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
                 .single();
 
             if (dbError || !data) {
-                throw new Error("ID não encontrado. Se você acabou de rodar o SQL de limpeza, clique em 'Configurar Admin' abaixo.");
+                throw new Error("ID não encontrado. Verifique o ID digitado.");
             }
 
-            // 2. Autenticar com Supabase Auth
             const { error: authError } = await supabase.auth.signInWithPassword({
                 email: data.email,
                 password,
             });
 
-            if (authError) throw new Error("Senha incorreta. Se for o admin, tente recriar clicando abaixo.");
+            if (authError) throw new Error("Senha incorreta.");
 
         } catch (err: any) {
             setError(err.message);
@@ -345,7 +359,6 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
 
         setLoading(true);
         try {
-            // 1. Cria Usuário na Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: 'admin@brotos.com',
                 password: 'jo1234',
@@ -355,7 +368,6 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
             if (authError) throw authError;
 
             if (authData.user) {
-                // 2. Cria Perfil no Banco
                 const { error: dbError } = await supabase.from('consultants').upsert({
                     id: '000000',
                     auth_id: authData.user.id,
@@ -393,9 +405,9 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
                         <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">ID de Consultor</label>
                         <div className="relative">
                             <input 
-                                type="text" required placeholder="Ex: 000000"
+                                type="text" required placeholder={placeholderId}
                                 value={id} onChange={(e) => setId(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-green-dark focus:border-transparent outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-green-dark focus:border-transparent outline-none transition-all font-mono"
                             />
                         </div>
                     </div>
@@ -468,45 +480,259 @@ const InviteModal: React.FC<{ isOpen: boolean; onClose: () => void; myId: string
     );
 };
 
-const OrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-    const { user } = useConsultant();
-    const [quantity, setQuantity] = useState(50);
-    const MIN_ORDER = 50;
+// Simula um histórico de pedidos para o painel financeiro
+const getMockFinancialHistory = () => {
+    const history = [
+        { id: 'PED-8921', date: '14/11/2023', boxes: 2, total: 420.00, status: 'Entregue' },
+        { id: 'PED-9102', date: '02/12/2023', boxes: 5, total: 1050.00, status: 'Entregue' },
+        { id: 'PED-9543', date: '20/01/2024', boxes: 1, total: 210.00, status: 'Entregue' },
+        { id: 'PED-9981', date: '15/02/2024', boxes: 8, total: 1680.00, status: 'Em Trânsito' },
+    ];
+    return history;
+};
 
+const FinancialScreen: React.FC = () => {
+    const transactions = getMockFinancialHistory();
+    
+    // Cálculos Financeiros Totais
+    const totalBoxesPurchased = transactions.reduce((acc, curr) => acc + curr.boxes, 0);
+    const totalInvested = transactions.reduce((acc, curr) => acc + curr.total, 0);
+    const totalUnits = totalBoxesPurchased * BUSINESS_RULES.UNITS_PER_BOX;
+    const potentialRevenue = totalUnits * BUSINESS_RULES.RETAIL_PRICE_PER_UNIT;
+    const potentialProfit = potentialRevenue - totalInvested;
+
+    return (
+        <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
+            <header className="mb-8 flex justify-between items-end">
+                <div>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Painel Financeiro</h2>
+                    <p className="text-gray-500">Acompanhe o rendimento do seu negócio.</p>
+                </div>
+                <div className="bg-green-100 text-brand-green-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2">
+                    <TrendingUpIcon /> Lucro de 100% na revenda
+                </div>
+            </header>
+
+            {/* Cards Principais */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Card de Lucro Estimado */}
+                <div className="bg-gradient-to-br from-green-600 to-brand-green-dark rounded-2xl p-6 text-white shadow-lg">
+                    <div className="flex items-center gap-3 mb-4 opacity-90">
+                        <div className="p-2 bg-white/20 rounded-lg"><BanknotesIcon /></div>
+                        <span className="font-medium">Lucro Estimado</span>
+                    </div>
+                    <p className="text-4xl font-bold mb-2">R$ {potentialProfit.toFixed(2).replace('.', ',')}</p>
+                    <p className="text-xs opacity-70">Baseado na venda de todas as unidades pelo preço sugerido.</p>
+                </div>
+
+                {/* Card de Faturamento Potencial */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4 text-gray-600">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><PresentationChartLineIcon /></div>
+                        <span className="font-medium">Faturamento Total (Potencial)</span>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-800 mb-2">R$ {potentialRevenue.toFixed(2).replace('.', ',')}</p>
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                        <span className="bg-green-50 px-2 py-0.5 rounded">+100%</span>
+                        <span>sobre o investimento</span>
+                    </div>
+                </div>
+
+                 {/* Card de Investimento */}
+                 <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4 text-gray-600">
+                        <div className="p-2 bg-orange-50 text-orange-600 rounded-lg"><PackageIcon /></div>
+                        <span className="font-medium">Total Investido (Custo)</span>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-800 mb-2">R$ {totalInvested.toFixed(2).replace('.', ',')}</p>
+                    <p className="text-xs text-gray-400">{totalBoxesPurchased} caixas adquiridas no total.</p>
+                </div>
+            </div>
+
+            {/* Tabela de Histórico */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800">Histórico de Pedidos</h3>
+                    <button className="text-sm text-brand-green-dark hover:underline font-medium">Exportar Relatório</button>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
+                            <tr>
+                                <th className="p-5">Data</th>
+                                <th className="p-5">Pedido</th>
+                                <th className="p-5">Volume</th>
+                                <th className="p-5">Valor Investido</th>
+                                <th className="p-5">Lucro Previsto</th>
+                                <th className="p-5">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {transactions.map((t, i) => (
+                                <tr key={i} className="hover:bg-gray-50 transition-colors">
+                                    <td className="p-5 flex items-center gap-2 text-gray-600">
+                                        <CalendarIcon /> {t.date}
+                                    </td>
+                                    <td className="p-5 font-mono text-xs font-bold text-gray-500">{t.id}</td>
+                                    <td className="p-5 text-gray-800 font-medium">{t.boxes} cx ({t.boxes * 12} un)</td>
+                                    <td className="p-5 text-gray-600">R$ {t.total.toFixed(2).replace('.',',')}</td>
+                                    <td className="p-5 font-bold text-green-600">
+                                        + R$ {(t.total).toFixed(2).replace('.',',')}
+                                    </td>
+                                    <td className="p-5">
+                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                                            t.status === 'Entregue' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                            {t.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+    const { user } = useConsultant();
+    const [boxes, setBoxes] = useState(1);
+    
     if (!isOpen) return null;
 
+    const boxPrice = BUSINESS_RULES.BOX_PRICE;
+    const subtotal = boxes * boxPrice;
+    const hasFreeShipping = boxes >= BUSINESS_RULES.FREE_SHIPPING_THRESHOLD;
+    
+    // Lucro potencial
+    const totalUnits = boxes * BUSINESS_RULES.UNITS_PER_BOX;
+    const potentialRevenue = totalUnits * BUSINESS_RULES.RETAIL_PRICE_PER_UNIT;
+    const potentialProfit = potentialRevenue - subtotal;
+
+    // Progresso Distribuidor nesta compra
+    const progressPercentage = Math.min(100, (boxes / BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES) * 100);
+
     const handleOrder = () => {
-        if (quantity < MIN_ORDER) return;
-        const message = `Olá, sou o consultor *${user?.name}* (ID: ${user?.id}).\n\n📝 *NOVO PEDIDO*\n\n📦 Produto: Pomada de Copaíba\n🔢 Quantidade: *${quantity} unidades*\n📍 Entrega: ${user?.address}\n\nAguardo PIX para pagamento.`;
+        const shippingText = hasFreeShipping ? "*Frete Grátis!* 🚚" : "*Frete a calcular*";
+        
+        const message = 
+`Olá, sou o consultor *${user?.name}* (ID: ${user?.id}).
+
+🛒 *NOVO PEDIDO CLUBE BROTOS*
+
+📦 *${boxes}x Caixas Fechadas* (${BUSINESS_RULES.UNITS_PER_BOX}un/caixa)
+💰 Valor Unit. Caixa: R$ ${boxPrice.toFixed(2).replace('.', ',')}
+💲 *Total Pedido: R$ ${subtotal.toFixed(2).replace('.', ',')}*
+📍 ${shippingText}
+
+📍 *Endereço de Entrega:*
+${user?.address}
+
+Aguardo dados PIX para pagamento.`;
+
         window.open(`https://wa.me/5571999999999?text=${encodeURIComponent(message)}`, '_blank');
         onClose();
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-                <div className="bg-brand-green-dark p-4 flex justify-between items-center text-white shadow-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="bg-brand-green-dark p-4 flex justify-between items-center text-white shadow-md shrink-0">
                     <h3 className="text-lg font-bold flex items-center gap-2"><ShoppingCartIcon /> Novo Pedido</h3>
                     <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1 transition"><CloseIcon /></button>
                 </div>
-                <div className="p-6">
-                     <div className="flex gap-4 items-center mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
-                        <img src="https://imgur.com/CGgz38b.png" alt="Pomada" className="w-20 h-20 object-contain bg-white rounded-md p-1 shadow-sm" />
-                        <div>
-                            <h4 className="font-bold text-gray-800">Pomada de Copaíba</h4>
-                            <p className="text-xs text-green-600 font-semibold bg-green-100 px-2 py-0.5 rounded-full w-fit mt-1">Atacado</p>
+                
+                <div className="p-6 overflow-y-auto">
+                    {/* Produto Principal */}
+                    <div className="flex flex-col md:flex-row gap-6 mb-8">
+                        <div className="w-full md:w-1/3">
+                            <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center aspect-square mb-2">
+                                <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full h-full object-contain mix-blend-multiply" />
+                            </div>
+                            <p className="text-center text-xs text-gray-500">Imagem ilustrativa</p>
+                        </div>
+                        
+                        <div className="w-full md:w-2/3 flex flex-col justify-between">
+                            <div>
+                                <div className="flex justify-between items-start mb-2">
+                                    <h4 className="text-xl font-bold text-gray-800">Caixa Display - Pomada Copaíba</h4>
+                                    <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Atacado</span>
+                                </div>
+                                <p className="text-gray-500 text-sm mb-4">Contém 12 unidades de 15g cada. Fórmula original Brotos da Terra.</p>
+                                
+                                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4">
+                                    <span className="text-gray-600 text-sm">Preço por Caixa:</span>
+                                    <span className="text-xl font-bold text-brand-green-dark">R$ {boxPrice.toFixed(2).replace('.',',')}</span>
+                                </div>
+                            </div>
+
+                            {/* Seletor de Quantidade */}
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">Quantidade de Caixas</label>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <button onClick={() => setBoxes(Math.max(1, boxes - 1))} className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded-xl hover:bg-gray-300 font-bold text-xl transition text-gray-600">-</button>
+                                    <div className="flex-1 bg-white border-2 border-gray-200 rounded-xl h-12 flex items-center justify-center">
+                                        <span className="text-2xl font-bold text-brand-green-dark">{boxes}</span>
+                                    </div>
+                                    <button onClick={() => setBoxes(boxes + 1)} className="w-12 h-12 flex items-center justify-center bg-brand-green-dark text-white rounded-xl hover:bg-opacity-90 font-bold text-xl transition">+</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-700 mb-3 text-center">Quantidade (Mínimo {MIN_ORDER})</label>
-                        <div className="flex items-center justify-center gap-4">
-                            <button onClick={() => setQuantity(Math.max(MIN_ORDER, quantity - 10))} className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full hover:bg-gray-300 font-bold text-xl transition">-</button>
-                            <span className="text-2xl font-bold text-brand-green-dark w-16 text-center">{quantity}</span>
-                            <button onClick={() => setQuantity(quantity + 10)} className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full hover:bg-gray-300 font-bold text-xl transition">+</button>
+
+                    {/* Regras e Benefícios */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        {/* Frete */}
+                        <div className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${hasFreeShipping ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
+                            <div className={`p-2 rounded-full ${hasFreeShipping ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}>
+                                <TruckIcon />
+                            </div>
+                            <div>
+                                <p className={`font-bold text-sm ${hasFreeShipping ? 'text-green-700' : 'text-gray-600'}`}>
+                                    {hasFreeShipping ? 'Frete Grátis Aplicado!' : 'Frete não incluso'}
+                                </p>
+                                {!hasFreeShipping && (
+                                    <p className="text-xs text-gray-500">Faltam {BUSINESS_RULES.FREE_SHIPPING_THRESHOLD - boxes} caixas para frete grátis.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Distribuidor */}
+                        <div className="p-4 rounded-xl border border-yellow-200 bg-yellow-50 flex flex-col justify-center">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-bold text-yellow-800 uppercase">Meta Distribuidor</span>
+                                <span className="text-xs font-bold text-yellow-800">{boxes}/{BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES} caixas</span>
+                            </div>
+                            <div className="w-full bg-yellow-200 h-2 rounded-full overflow-hidden">
+                                <div className="bg-yellow-500 h-full transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div>
+                            </div>
+                            <p className="text-[10px] text-yellow-700 mt-1 text-center">Compre 50 caixas para se tornar Distribuidor</p>
                         </div>
                     </div>
-                    <button onClick={handleOrder} className="w-full bg-green-600 text-white py-4 rounded-lg font-bold hover:bg-green-700 shadow-lg transform active:scale-95 transition-all flex justify-center items-center gap-2">
-                        <WhatsAppIcon /> Enviar Pedido
+
+                    {/* Resumo Financeiro */}
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 mb-6">
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-gray-600">Total em Produtos ({totalUnits} un):</span>
+                            <span className="font-medium">R$ {subtotal.toFixed(2).replace('.',',')}</span>
+                        </div>
+                         <div className="flex justify-between text-sm mb-2 text-green-600">
+                            <span className="">Potencial de Venda (R$ 35/un):</span>
+                            <span className="font-medium">R$ {potentialRevenue.toFixed(2).replace('.',',')}</span>
+                        </div>
+                        <div className="border-t border-gray-200 my-2 pt-2 flex justify-between items-center">
+                            <span className="font-bold text-gray-800 text-lg">Total a Pagar:</span>
+                            <span className="font-bold text-brand-green-dark text-2xl">R$ {subtotal.toFixed(2).replace('.',',')}</span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                             <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">Seu Lucro Potencial: R$ {potentialProfit.toFixed(2).replace('.',',')}</span>
+                        </div>
+                    </div>
+
+                    <button onClick={handleOrder} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg transform active:scale-[0.99] transition-all flex justify-center items-center gap-2 text-lg">
+                        <WhatsAppIcon /> Enviar Pedido via WhatsApp
                     </button>
                 </div>
             </div>
@@ -516,13 +742,23 @@ const OrderModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
 
 const DashboardShell: React.FC = () => {
     const { user, stats, signOut, consultants } = useConsultant();
-    const [activeTab, setActiveTab] = useState<'home' | 'team'>('home');
+    const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'finance'>('home');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
 
     const myTeam = user?.role === 'admin' 
         ? consultants 
         : consultants.filter(c => c.parent_id === user?.id);
+
+    // Simulação de progresso (No futuro, isso viria do banco de dados de pedidos)
+    // Para demonstração, vamos assumir que ele tem 0 compras se não for admin
+    const currentBoxes = 0; 
+    const distributorProgress = (currentBoxes / BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES) * 100;
+
+    const handleOpenShop = () => {
+        setActiveTab('shop');
+        setIsOrderOpen(true);
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row font-sans">
@@ -540,24 +776,25 @@ const DashboardShell: React.FC = () => {
                             <p className="text-xs opacity-70 font-mono">ID: {user?.id}</p>
                         </div>
                     </div>
-                    {user?.role === 'admin' && (
-                        <div className="mt-3 px-3 py-1 bg-yellow-500/20 text-yellow-200 text-xs font-bold uppercase rounded border border-yellow-500/30 text-center shadow-sm">
-                            Painel Administrativo
-                        </div>
-                    )}
+                    <div className="mt-3 px-3 py-1 bg-white/10 text-white/80 text-xs font-bold uppercase rounded border border-white/10 text-center shadow-sm">
+                        Nível: {user?.role === 'admin' ? 'Administrador' : user?.role === 'leader' ? 'Líder/Distribuidor' : 'Consultor'}
+                    </div>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     <button onClick={() => setActiveTab('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
-                        <ChartBarIcon /> Painel Geral
+                        <ChartBarIcon /> Visão Geral
                     </button>
-                    <button onClick={() => setIsOrderOpen(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-yellow-300 font-bold transition-colors">
-                        <ShoppingCartIcon /> Novo Pedido
+                    <button onClick={() => setActiveTab('finance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'finance' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                        <BanknotesIcon /> Financeiro
+                    </button>
+                    <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
+                        <ShoppingCartIcon /> Fazer Pedido
                     </button>
                      <button onClick={() => setActiveTab('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
                         <UsersIcon /> Minha Equipe
                     </button>
                     <div className="pt-4 mt-4 border-t border-white/10">
-                        <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Ações Rápidas</p>
+                        <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
                         <button onClick={() => setIsInviteOpen(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
                             <PlusIcon /> Convidar Consultor
                         </button>
@@ -570,37 +807,88 @@ const DashboardShell: React.FC = () => {
 
             <main className="flex-1 p-6 md:p-10 overflow-y-auto h-screen">
                 {activeTab === 'home' && (
-                    <div className="max-w-5xl mx-auto animate-fade-in">
-                        <h2 className="text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
-                        <p className="text-gray-500 mb-8">Aqui está o resumo do seu negócio hoje.</p>
+                    <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
+                        <header className="mb-8">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
+                            <p className="text-gray-500">Acompanhe o crescimento do seu negócio Brotos da Terra.</p>
+                        </header>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><UsersIcon /></div>
+                        {/* Card de Carreira / Meta Distribuidor */}
+                        <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+                                    <TrendingUpIcon /> Plano de Carreira: Distribuidor
+                                </h3>
+                                <div className="flex flex-col md:flex-row gap-8 items-center">
+                                    <div className="flex-1 w-full">
+                                        <div className="flex justify-between text-xs uppercase font-bold mb-2 opacity-80">
+                                            <span>Consultor (Atual)</span>
+                                            <span>Meta: {BUSINESS_RULES.DISTRIBUTOR_TARGET_BOXES} Caixas</span>
+                                        </div>
+                                        <div className="w-full bg-gray-600 h-4 rounded-full overflow-hidden border border-gray-500">
+                                            <div className="bg-yellow-400 h-full shadow-[0_0_10px_rgba(250,204,21,0.5)]" style={{width: `${distributorProgress}%`}}></div>
+                                        </div>
+                                        <p className="text-xs mt-2 text-gray-300">Adquira 50 caixas para se tornar um Distribuidor oficial e liderar sua rede.</p>
+                                    </div>
+                                    <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10 min-w-[200px]">
+                                        <p className="text-xs text-gray-300 uppercase mb-1">Preço Exclusivo</p>
+                                        <p className="text-2xl font-bold text-yellow-400">R$ 210,00</p>
+                                        <p className="text-xs text-gray-300">por caixa (12un)</p>
+                                    </div>
                                 </div>
-                                <h3 className="text-gray-500 font-medium text-sm">Total na Equipe</h3>
-                                <p className="text-4xl font-bold text-gray-800 mt-1">{user?.role === 'admin' ? stats.totalConsultants : myTeam.length}</p>
                             </div>
-                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                            {/* Decorative background elements */}
+                            <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+                            <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div onClick={() => setActiveTab('finance')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className="p-3 bg-green-50 text-green-600 rounded-xl"><SparklesIcon /></div>
+                                    <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-100 transition-colors"><BanknotesIcon /></div>
+                                    <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Ver Detalhes</span>
                                 </div>
-                                <h3 className="text-gray-500 font-medium text-sm">Novos este Mês</h3>
-                                <p className="text-4xl font-bold text-gray-800 mt-1">{stats.newThisMonth}</p>
+                                <h3 className="text-gray-500 font-medium text-sm">Lucro Estimado</h3>
+                                <p className="text-4xl font-bold text-gray-800 mt-1">R$ 3.360</p>
+                                <p className="text-xs text-green-600 mt-2">Com base no histórico</p>
                             </div>
-                             <div className="bg-gradient-to-br from-brand-green-dark to-green-800 text-white p-6 rounded-2xl shadow-lg">
-                                <h3 className="font-bold text-lg mb-2">Indique e Cresça</h3>
-                                <p className="text-white/80 text-sm mb-4">Convide novos consultores para sua rede e aumente seus ganhos.</p>
-                                <button onClick={() => setIsInviteOpen(true)} className="bg-white text-brand-green-dark px-4 py-2 rounded-lg font-bold text-sm w-full hover:bg-gray-100 transition">Gerar Link de Convite</button>
+                            
+                            <div onClick={() => setActiveTab('team')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors"><UsersIcon /></div>
+                                    <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Gerenciar</span>
+                                </div>
+                                <h3 className="text-gray-500 font-medium text-sm">Minha Equipe</h3>
+                                <p className="text-4xl font-bold text-gray-800 mt-1">{myTeam.length}</p>
+                            </div>
+
+                            <div onClick={handleOpenShop} className="bg-brand-green-dark text-white p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
+                                <div className="relative z-10">
+                                    <h3 className="font-bold text-xl mb-1">Fazer Pedido</h3>
+                                    <p className="text-white/70 text-sm mb-4">Reabasteça seu estoque com preço de atacado.</p>
+                                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg font-bold text-sm group-hover:bg-white/30 transition-all">
+                                        <ShoppingCartIcon /> Comprar Agora
+                                    </div>
+                                </div>
+                                <div className="absolute -bottom-4 -right-4 text-white/10 transform group-hover:scale-110 transition-transform duration-500">
+                                    <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
+                {activeTab === 'finance' && <FinancialScreen />}
+
                 {activeTab === 'team' && (
                     <div className="max-w-5xl mx-auto animate-fade-in">
-                         <h2 className="text-2xl font-bold text-gray-800 mb-6">Gestão de Equipe</h2>
+                         <div className="flex justify-between items-center mb-6">
+                             <h2 className="text-2xl font-bold text-gray-800">Gestão de Equipe</h2>
+                             <button onClick={() => setIsInviteOpen(true)} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition">
+                                 <PlusIcon /> Novo Membro
+                             </button>
+                         </div>
+                        
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
@@ -642,15 +930,58 @@ const DashboardShell: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {activeTab === 'shop' && (
+                    <div className="max-w-5xl mx-auto animate-fade-in">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Catálogo do Consultor</h2>
+                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
+                            <div className="w-full md:w-1/3 bg-gray-50 rounded-xl p-8 aspect-square flex items-center justify-center">
+                                 <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full object-contain mix-blend-multiply hover:scale-105 transition-transform duration-300" />
+                            </div>
+                            <div className="w-full md:w-2/3">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="bg-brand-green-dark text-white text-xs font-bold px-2 py-1 rounded uppercase">Carro Chefe</span>
+                                    <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase">Margem Alta</span>
+                                </div>
+                                <h3 className="text-3xl font-bold text-gray-800 mb-2">Caixa Display - Pomada de Copaíba</h3>
+                                <p className="text-gray-500 mb-6 leading-relaxed">
+                                    O produto campeão de vendas. Caixa display pronta para exposição no balcão, contendo 12 unidades da autêntica Pomada de Copaíba Brotos da Terra. Alívio imediato e fidelização garantida.
+                                </p>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                        <p className="text-xs text-gray-500 uppercase font-bold">Você Paga</p>
+                                        <p className="text-2xl font-bold text-brand-green-dark">R$ 210,00</p>
+                                        <p className="text-xs text-gray-400">R$ 17,50 / unidade</p>
+                                    </div>
+                                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                                        <p className="text-xs text-green-600 uppercase font-bold">Preço Sugerido</p>
+                                        <p className="text-2xl font-bold text-green-700">R$ 420,00</p>
+                                        <p className="text-xs text-green-600">R$ 35,00 / unidade</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <button onClick={() => setIsOrderOpen(true)} className="flex-1 bg-brand-green-dark text-white font-bold py-4 rounded-xl hover:bg-opacity-90 shadow-lg transition-all flex items-center justify-center gap-2">
+                                        <ShoppingCartIcon /> Comprar Agora
+                                    </button>
+                                    <div className="flex-1 flex items-center justify-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-xl border border-gray-200 p-2">
+                                        <TruckIcon /> Frete grátis acima de 4 cxs
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
             
-            <OrderModal isOpen={isOrderOpen} onClose={() => setIsOrderOpen(false)} />
+            <NewOrderScreen isOpen={isOrderOpen} onClose={() => setIsOrderOpen(false)} />
             <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} myId={user?.id || ''} />
         </div>
     );
 };
 
-// --- 4. Ponto de Entrada ---
+// --- 5. Ponto de Entrada ---
 
 export const ConsultantSystem: React.FC = () => {
     const { user, loading } = useConsultant();
