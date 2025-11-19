@@ -315,7 +315,6 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
         
         try {
             // 1. Buscar Email através do ID na tabela 'consultants'
-            // Isso exige que a tabela exista e tenha a política 'Public read' ativa.
             const { data, error: dbError } = await supabase
                 .from('consultants')
                 .select('email')
@@ -323,7 +322,7 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
                 .single();
 
             if (dbError || !data) {
-                throw new Error("ID não encontrado. Verifique se digitou corretamente ou se o cadastro foi concluído.");
+                throw new Error("ID não encontrado. Se você acabou de rodar o SQL de limpeza, clique em 'Configurar Admin' abaixo.");
             }
 
             // 2. Autenticar com Supabase Auth
@@ -332,10 +331,52 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
                 password,
             });
 
-            if (authError) throw new Error("Senha incorreta.");
+            if (authError) throw new Error("Senha incorreta. Se for o admin, tente recriar clicando abaixo.");
 
         } catch (err: any) {
             setError(err.message);
+            setLoading(false);
+        }
+    };
+
+    const handleSetupAdmin = async () => {
+        const confirmSetup = window.confirm("Isso tentará criar o Admin com ID 000000 e senha 'jo1234'. Certifique-se de ter apagado o usuário antigo no SQL do Supabase primeiro. Continuar?");
+        if (!confirmSetup) return;
+
+        setLoading(true);
+        try {
+            // 1. Cria Usuário na Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: 'admin@brotos.com',
+                password: 'jo1234',
+                options: { data: { full_name: 'Administrador Principal' } }
+            });
+
+            if (authError) throw authError;
+
+            if (authData.user) {
+                // 2. Cria Perfil no Banco
+                const { error: dbError } = await supabase.from('consultants').upsert({
+                    id: '000000',
+                    auth_id: authData.user.id,
+                    name: 'Administrador Principal',
+                    email: 'admin@brotos.com',
+                    whatsapp: '00000000000',
+                    role: 'admin',
+                    address: 'Matriz'
+                }, { onConflict: 'id' });
+                
+                if (dbError) throw dbError;
+                
+                alert("Admin criado com sucesso! Agora faça login com ID 000000 e senha jo1234.");
+                setId('000000');
+                setPassword('jo1234');
+            } else {
+                alert("Verifique seu email para confirmar o cadastro.");
+            }
+        } catch (err: any) {
+            alert("Erro ao configurar admin: " + err.message);
+        } finally {
             setLoading(false);
         }
     };
@@ -388,6 +429,13 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
                     className="w-full bg-white text-brand-green-dark border-2 border-brand-green-dark font-bold py-3 rounded-lg hover:bg-green-50 transition-all"
                 >
                     Quero ser um Consultor
+                </button>
+                
+                <button 
+                    onClick={handleSetupAdmin}
+                    className="mt-6 text-xs text-gray-400 hover:text-brand-green-dark underline transition-colors"
+                >
+                    Configurar Admin (Primeiro Acesso)
                 </button>
             </div>
         </div>
