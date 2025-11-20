@@ -1590,69 +1590,27 @@ const DashboardShell: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-brand-dark-bg flex flex-col font-sans relative transition-colors duration-300">
+        <div className="min-h-screen bg-gray-50 dark:bg-brand-dark-bg font-sans relative transition-colors duration-300">
             
-            {/* Overlay for Menu (Visible on all screens when open) */}
+            {/* Overlay for Mobile Menu */}
             {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity duration-300"
+                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity duration-300 md:hidden"
                     onClick={() => setIsSidebarOpen(false)}
                 ></div>
             )}
 
-            {/* Universal Header (Visible on all screens) */}
-            <div className="bg-white/90 dark:bg-brand-dark-card/90 text-brand-text dark:text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-sm backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
-                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                        <MenuIcon className="h-8 w-8 text-brand-green-dark dark:text-white" />
-                    </button>
-                    <div className="h-10 w-auto flex items-center justify-center">
-                        <BrandLogo className="h-8 w-auto" />
-                    </div>
-                </div>
-                
-                {/* Right side of header */}
-                <div className="flex items-center gap-3 relative">
-                    <button 
-                        onClick={toggleTheme}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors text-gray-600 dark:text-gray-300"
-                    >
-                        {theme === 'light' ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
-                    </button>
-
-                    <button 
-                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                        className="relative p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
-                    >
-                        <BellIcon className="h-6 w-6 text-brand-green-dark dark:text-white" />
-                        {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-brand-dark-card">
-                                {unreadCount}
-                            </span>
-                        )}
-                    </button>
-
-                     <div className="w-8 h-8 rounded-full bg-brand-earth text-white flex items-center justify-center font-bold shadow-md text-sm">
-                        {user?.name?.charAt(0)}
-                    </div>
-
-                    <NotificationsPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
-                </div>
-            </div>
-
-            {/* Sidebar Navigation (Off-canvas Drawer) */}
+            {/* Sidebar Navigation (Fixed on Desktop, Drawer on Mobile) */}
             <aside className={`
                 fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark dark:bg-brand-dark-card text-white flex flex-col shadow-2xl 
                 transform transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                md:translate-x-0 md:shadow-none
             `}>
-                 {/* Close Button */}
+                 {/* Close Button (Mobile Only) */}
                  <button 
                     onClick={() => setIsSidebarOpen(false)} 
-                    className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors md:hidden"
                 >
                     <CloseIcon className="h-8 w-8 text-white" />
                 </button>
@@ -1685,7 +1643,6 @@ const DashboardShell: React.FC = () => {
                         </button>
                     )}
                     
-                    {/* O Admin também pode ver os materiais para editar */}
                     <button onClick={() => handleNav('materials')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'materials' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
                         <PhotoIcon /> Materiais para Redes Sociais
                     </button>
@@ -1696,7 +1653,6 @@ const DashboardShell: React.FC = () => {
                         </button>
                     )}
                     
-                    {/* A aba de equipe só aparece para o admin ou para quem tem indicados (hasTeam) */}
                     {(isAdmin || hasTeam) && (
                         <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
                             <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
@@ -1715,7 +1671,63 @@ const DashboardShell: React.FC = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 p-4 md:p-10 overflow-y-auto">
+            {/* Main Content Wrapper */}
+            <div className="flex flex-col min-h-screen md:ml-72 transition-all duration-300">
+                {/* Header (Sticky) */}
+                <div className="bg-white/90 dark:bg-brand-dark-card/90 text-brand-text dark:text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-sm backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
+                     <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors md:hidden"
+                        >
+                            <MenuIcon className="h-8 w-8 text-brand-green-dark dark:text-white" />
+                        </button>
+                        {/* Mobile Logo */}
+                        <div className="h-10 w-auto flex items-center justify-center md:hidden">
+                            <BrandLogo className="h-8 w-auto" />
+                        </div>
+                        {/* Desktop Welcome Text (Optional replacement for logo) */}
+                        <div className="hidden md:block">
+                            <h1 className="text-lg font-bold text-brand-green-dark dark:text-white font-serif">
+                                {activeTab === 'home' ? 'Visão Geral' : 
+                                 activeTab === 'business' ? 'Meu Negócio' :
+                                 activeTab === 'materials' ? 'Materiais' :
+                                 activeTab === 'team' ? 'Equipe' : 'Loja'}
+                            </h1>
+                        </div>
+                    </div>
+                    
+                    {/* Right side of header */}
+                    <div className="flex items-center gap-3 relative">
+                        <button 
+                            onClick={toggleTheme}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors text-gray-600 dark:text-gray-300"
+                        >
+                            {theme === 'light' ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
+                        </button>
+
+                        <button 
+                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                            className="relative p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <BellIcon className="h-6 w-6 text-brand-green-dark dark:text-white" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-brand-dark-card">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+
+                         <div className="w-8 h-8 rounded-full bg-brand-earth text-white flex items-center justify-center font-bold shadow-md text-sm cursor-default" title={user?.name}>
+                            {user?.name?.charAt(0)}
+                        </div>
+
+                        <NotificationsPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+                    </div>
+                </div>
+
+                {/* Page Content */}
+                <main className="flex-1 p-4 md:p-10 overflow-y-auto">
                 {activeTab === 'home' && (
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
                         <header className="mb-4 md:mb-8">
@@ -2074,6 +2086,7 @@ const DashboardShell: React.FC = () => {
                 )}
 
             </main>
+            </div>
 
             {/* Modals */}
             <NewOrderScreen isOpen={isOrderOpen} onClose={() => {setIsOrderOpen(false); if(activeTab === 'shop') setActiveTab('home');}} />
@@ -2083,9 +2096,9 @@ const DashboardShell: React.FC = () => {
     );
 };
 
-const MainContent: React.FC = () => {
+const MainScreenWrapper: React.FC = () => {
     const { user, loading } = useConsultant();
-    const [isRegistering, setIsRegistering] = useState(false);
+    const [showRegister, setShowRegister] = useState(false);
     const [referrerId, setReferrerId] = useState('000000');
 
     useEffect(() => {
@@ -2093,28 +2106,36 @@ const MainContent: React.FC = () => {
         const ref = params.get('ref');
         if (ref) {
             setReferrerId(ref);
-            setIsRegistering(true);
+            setShowRegister(true);
         }
     }, []);
 
-    if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-brand-dark-bg">
-            <div className="w-8 h-8 border-4 border-brand-green-dark dark:border-green-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-    );
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-brand-dark-bg">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-green-dark"></div>
+            </div>
+        );
+    }
 
-    if (user) return <DashboardShell />;
+    if (!user) {
+        if (showRegister) {
+            return <RegisterScreen referrerId={referrerId} onBack={() => setShowRegister(false)} />;
+        }
+        return <LoginScreen onSignup={() => {
+             setReferrerId('000000');
+             setShowRegister(true);
+        }} />;
+    }
 
-    if (isRegistering) return <RegisterScreen referrerId={referrerId} onBack={() => setIsRegistering(false)} />;
-
-    return <LoginScreen onSignup={() => setIsRegistering(true)} />;
+    return <DashboardShell />;
 };
 
 export const ConsultantApp: React.FC = () => {
     return (
         <ThemeProvider>
             <ConsultantProvider>
-                <MainContent />
+                <MainScreenWrapper />
             </ConsultantProvider>
         </ThemeProvider>
     );
