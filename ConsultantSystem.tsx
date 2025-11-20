@@ -648,13 +648,42 @@ const SocialMediaMaterialsScreen: React.FC = () => {
         fetchMaterials();
     }, []);
 
+    // Helper function to format Imgur links to direct links
+    const formatImgurUrl = (url: string | undefined) => {
+        if (!url) return '';
+        
+        let cleanUrl = url.split('?')[0].trim();
+        
+        // Se já é um link direto (tem extensão), retorna
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(cleanUrl)) {
+            return cleanUrl;
+        }
+
+        // Se for um link do Imgur sem extensão
+        if (cleanUrl.includes('imgur.com')) {
+            // Remove 'https://' e 'www' para facilitar o parse
+            const parts = cleanUrl.split('/');
+            const id = parts[parts.length - 1];
+            // Retorna formato direto (i.imgur.com/ID.png)
+            return `https://i.imgur.com/${id}.png`;
+        }
+
+        return url;
+    };
+
     const handleAddMaterial = async () => {
         if (!newMaterial.title || !newMaterial.category) {
             alert("Preencha os campos obrigatórios.");
             return;
         }
 
-        const { error } = await supabase.from('marketing_materials').insert([newMaterial]);
+        // Apply formatting to URL before saving
+        const formattedMaterial = { ...newMaterial };
+        if (formattedMaterial.type === 'image' && formattedMaterial.image_url) {
+            formattedMaterial.image_url = formatImgurUrl(formattedMaterial.image_url);
+        }
+
+        const { error } = await supabase.from('marketing_materials').insert([formattedMaterial]);
         
         if (error) {
             alert("Erro ao adicionar: " + error.message);
@@ -694,7 +723,9 @@ const SocialMediaMaterialsScreen: React.FC = () => {
     };
 
     const handleDownload = (url: string) => {
-        window.open(url, '_blank');
+        // Ensure we are downloading the formatted URL
+        const directUrl = formatImgurUrl(url);
+        window.open(directUrl, '_blank');
     };
 
     return (
@@ -757,9 +788,18 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                             {item.type === 'image' ? (
                                 // Card de Imagem
                                 <>
-                                    <div className={`h-48 w-full bg-gray-100 flex items-center justify-center relative overflow-hidden`}>
+                                    <div className={`h-48 w-full bg-gray-100 flex items-center justify-center relative overflow-hidden group-hover:bg-gray-200 transition-colors`}>
                                         {item.image_url ? (
-                                            <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                            <img 
+                                                src={formatImgurUrl(item.image_url)} 
+                                                alt={item.title} 
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                                                onError={(e) => {
+                                                    // Fallback em caso de erro no link
+                                                    (e.target as HTMLImageElement).onerror = null;
+                                                    (e.target as HTMLImageElement).src = "https://placehold.co/600x400/f3f4f6/9ca3af?text=Imagem+Indispon%C3%ADvel";
+                                                }}
+                                            />
                                         ) : (
                                             <PhotoIcon className="w-12 h-12 text-gray-300" />
                                         )}
@@ -869,10 +909,11 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                                         <input 
                                             type="text" 
                                             className="w-full border p-2 rounded"
-                                            placeholder="https://i.imgur.com/..."
+                                            placeholder="Cole o link do post do Imgur aqui"
                                             value={newMaterial.image_url || ''}
                                             onChange={(e) => setNewMaterial({...newMaterial, image_url: e.target.value})}
                                         />
+                                        <p className="text-[10px] text-gray-400 mt-1">O sistema ajustará automaticamente links do Imgur.</p>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 mb-1">Descrição Curta</label>
@@ -910,8 +951,6 @@ const SocialMediaMaterialsScreen: React.FC = () => {
 };
 
 const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-// ... rest of the file (NewOrderScreen, DashboardShell, etc.) remains unchanged ...
-// Just verify the component closing tags are correct below.
     const { user } = useConsultant();
     const [boxes, setBoxes] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'pix'>('whatsapp');
