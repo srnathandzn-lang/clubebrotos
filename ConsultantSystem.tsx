@@ -989,10 +989,10 @@ const DashboardShell: React.FC = () => {
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
                         <header className="mb-4 md:mb-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
-                            <p className="text-gray-500 text-sm md:text-base">
+                            <p className="text-gray-500 text-sm md:text-base whitespace-pre-line">
                                 {isAdmin 
                                     ? "Visão geral e monitoramento do sistema Brotos da Terra."
-                                    : "Acompanhe o crescimento do seu negócio Brotos da Terra."
+                                    : "Parabéns pela decisão de se tornar uma consultora de vendas independente.\n\nAgora você pode construir seu negócio de sucesso de duas formas; como uma consultora de vendas e também como uma distribuidora independente de vendas."
                                 }
                             </p>
                         </header>
