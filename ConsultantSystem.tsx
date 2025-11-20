@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from './lib/supabaseClient';
 import type { Consultant, ConsultantRole, ConsultantStats } from './types';
@@ -7,7 +8,8 @@ import {
   SparklesIcon, ShieldCheckIcon, ShoppingCartIcon,
   PackageIcon, TruckIcon, TrendingUpIcon,
   BanknotesIcon, PresentationChartLineIcon, CalendarIcon, MenuIcon,
-  QrCodeIcon, DocumentDuplicateIcon, CheckCircleIcon, CreditCardIcon
+  QrCodeIcon, DocumentDuplicateIcon, CheckCircleIcon, CreditCardIcon,
+  PhotoIcon, DownloadIcon, ClipboardCopyIcon, TrashIcon
 } from './components/Icons';
 
 // --- InfinitePay Config ---
@@ -20,6 +22,140 @@ const BUSINESS_RULES = {
     RETAIL_PRICE_PER_UNIT: 35.00, // Preço sugerido de venda por pomada
     FREE_SHIPPING_THRESHOLD: 4, // Em caixas
     DISTRIBUTOR_TARGET_BOXES: 50,
+};
+
+// --- Types Local Definition for Materials ---
+interface MarketingMaterial {
+    id: number;
+    type: 'image' | 'text';
+    category: string;
+    title: string;
+    description?: string;
+    content?: string;
+    image_url?: string;
+    created_at?: string;
+}
+
+// --- Componente de Simulação de Ganhos (Novo) ---
+const EarningsSimulator: React.FC = () => {
+    // Regra: Lucro Unitário = R$ 17,50
+    const PROFIT_PER_UNIT = 17.50;
+    const DAYS_IN_MONTH = 30;
+
+    // Estado para o Slider de Meta Financeira
+    const [financialGoal, setFinancialGoal] = useState(2500);
+    
+    // Cálculo dinâmico de vendas necessárias
+    const salesNeededPerMonth = Math.ceil(financialGoal / PROFIT_PER_UNIT);
+    const salesNeededPerDay = Math.ceil(salesNeededPerMonth / DAYS_IN_MONTH);
+
+    // Cenários pré-definidos
+    const scenarios = [
+        { sales: 2, label: "Inicial", color: "bg-blue-50 border-blue-200 text-blue-700" },
+        { sales: 5, label: "Focada", color: "bg-green-50 border-green-200 text-green-700" },
+        { sales: 10, label: "Visionária", color: "bg-purple-50 border-purple-200 text-purple-700" }
+    ];
+
+    return (
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all hover:shadow-xl">
+            {/* Cabeçalho Motivacional */}
+            <div className="bg-brand-green-dark p-6 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+                    <SparklesIcon />
+                </div>
+                <h3 className="font-serif text-xl md:text-2xl font-bold mb-2 leading-tight relative z-10">
+                    Seja dona do seu próprio negócio.
+                </h3>
+                <p className="text-green-100 text-xs md:text-sm opacity-90 max-w-md relative z-10">
+                    Você define onde vai atuar, quanto tempo vai dedicar e quanto quer ganhar.
+                </p>
+            </div>
+
+            <div className="p-6 flex flex-col gap-8">
+                {/* Seção 1: Cenários de Vendas (Cards Visuais) */}
+                <div>
+                    <div className="flex items-center gap-2 mb-4 text-brand-green-dark font-bold text-sm uppercase tracking-wide">
+                        <BanknotesIcon className="w-5 h-5" />
+                        <span>Possibilidades de Ganho no Mês</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {scenarios.map((scenario) => {
+                            const monthlyProfit = scenario.sales * DAYS_IN_MONTH * PROFIT_PER_UNIT;
+                            return (
+                                <div key={scenario.sales} className={`p-4 rounded-2xl border-2 ${scenario.color} transition-transform hover:-translate-y-1 cursor-default group`}>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-[10px] font-black uppercase opacity-70">{scenario.label}</span>
+                                        <span className="text-xs font-bold bg-white/60 px-2 py-1 rounded-full">
+                                            {scenario.sales} / dia
+                                        </span>
+                                    </div>
+                                    <div className="text-center mt-2">
+                                        <span className="text-xs text-gray-500 block mb-1">Lucro Mensal</span>
+                                        <span className="text-xl md:text-2xl font-black tracking-tight">
+                                            R$ {monthlyProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Divisor */}
+                <div className="border-t border-dashed border-gray-200"></div>
+
+                {/* Seção 2: Calculadora Interativa (Slider) */}
+                <div>
+                    <div className="flex items-center justify-between mb-6">
+                        <p className="text-gray-700 font-bold text-sm">
+                            Quanto você gostaria de ganhar?
+                        </p>
+                        <div className="bg-brand-green-light text-brand-green-dark px-4 py-1 rounded-full font-bold text-sm shadow-inner">
+                            Meta: R$ {financialGoal.toLocaleString('pt-BR')}
+                        </div>
+                    </div>
+
+                    {/* Slider Customizado */}
+                    <div className="relative mb-8 px-2">
+                        <input 
+                            type="range" 
+                            min="500" 
+                            max="6000" 
+                            step="100" 
+                            value={financialGoal}
+                            onChange={(e) => setFinancialGoal(Number(e.target.value))}
+                            className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-green-dark"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                            <span>R$ 500</span>
+                            <span>R$ 3.000</span>
+                            <span>R$ 6.000+</span>
+                        </div>
+                    </div>
+
+                    {/* Resultado do Cálculo */}
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white p-2 rounded-lg shadow-sm text-brand-green-dark">
+                                <PackageIcon />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500 font-bold uppercase">Meta de Vendas</p>
+                                <p className="text-gray-800 text-sm leading-tight">Para atingir sua meta financeira.</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <span className="block text-2xl font-black text-brand-green-dark">
+                                ~{salesNeededPerDay}
+                            </span>
+                            <span className="text-xs text-gray-500 font-medium">pomadas / dia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 // --- 2. Lógica Auxiliar ---
@@ -483,123 +619,299 @@ const InviteModal: React.FC<{ isOpen: boolean; onClose: () => void; myId: string
     );
 };
 
-// Simula um histórico de pedidos para o painel financeiro
-const getMockFinancialHistory = () => {
-    const history = [
-        { id: 'PED-8921', date: '14/11/2023', boxes: 2, total: 420.00, status: 'Entregue' },
-        { id: 'PED-9102', date: '02/12/2023', boxes: 5, total: 1050.00, status: 'Entregue' },
-        { id: 'PED-9543', date: '20/01/2024', boxes: 1, total: 210.00, status: 'Entregue' },
-        { id: 'PED-9981', date: '15/02/2024', boxes: 8, total: 1680.00, status: 'Em Trânsito' },
-    ];
-    return history;
-};
-
-const FinancialScreen: React.FC = () => {
-    const transactions = getMockFinancialHistory();
+// --- NOVO: Tela de Materiais para Redes Sociais ---
+const SocialMediaMaterialsScreen: React.FC = () => {
+    const { user } = useConsultant();
+    const isAdmin = user?.role === 'admin';
+    const [activeCategory, setActiveCategory] = useState('all');
+    const [materials, setMaterials] = useState<MarketingMaterial[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     
-    // Cálculos Financeiros Totais
-    const totalBoxesPurchased = transactions.reduce((acc, curr) => acc + curr.boxes, 0);
-    const totalInvested = transactions.reduce((acc, curr) => acc + curr.total, 0);
-    const totalUnits = totalBoxesPurchased * BUSINESS_RULES.UNITS_PER_BOX;
-    const potentialRevenue = totalUnits * BUSINESS_RULES.RETAIL_PRICE_PER_UNIT;
-    const potentialProfit = potentialRevenue - totalInvested;
+    // Admin States
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newMaterial, setNewMaterial] = useState<Partial<MarketingMaterial>>({ type: 'image', category: 'products' });
+
+    const fetchMaterials = async () => {
+        setIsLoading(true);
+        const { data, error } = await supabase
+            .from('marketing_materials')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+            setMaterials(data);
+        }
+        setIsLoading(false);
+    };
+
+    useEffect(() => {
+        fetchMaterials();
+    }, []);
+
+    const handleAddMaterial = async () => {
+        if (!newMaterial.title || !newMaterial.category) {
+            alert("Preencha os campos obrigatórios.");
+            return;
+        }
+
+        const { error } = await supabase.from('marketing_materials').insert([newMaterial]);
+        
+        if (error) {
+            alert("Erro ao adicionar: " + error.message);
+        } else {
+            setIsAddModalOpen(false);
+            setNewMaterial({ type: 'image', category: 'products' }); // Reset
+            fetchMaterials();
+        }
+    };
+
+    const handleDeleteMaterial = async (id: number) => {
+        if(!window.confirm("Tem certeza que deseja excluir este material?")) return;
+
+        const { error } = await supabase.from('marketing_materials').delete().eq('id', id);
+        if (error) {
+            alert("Erro ao deletar: " + error.message);
+        } else {
+            fetchMaterials();
+        }
+    };
+
+    const categories = [
+        { id: 'all', label: 'Todos' },
+        { id: 'products', label: '📦 Produtos' },
+        { id: 'company', label: '💼 Empresa' },
+        { id: 'texts', label: '💬 Textos Prontos' },
+        { id: 'promo', label: '📣 Promoções' },
+    ];
+
+    const filteredMaterials = activeCategory === 'all' 
+        ? materials 
+        : materials.filter(m => m.category === activeCategory);
+
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        alert("Texto copiado para a área de transferência!");
+    };
+
+    const handleDownload = (url: string) => {
+        window.open(url, '_blank');
+    };
 
     return (
-        <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
-            <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Painel Financeiro</h2>
-                    <p className="text-gray-500 text-sm md:text-base">Acompanhe o rendimento do seu negócio.</p>
+        <div className="max-w-6xl mx-auto animate-fade-in">
+            {/* Header da Seção */}
+            <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="text-center md:text-left">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Acervo de Posts para Divulgação</h2>
+                    <p className="text-gray-500 text-sm md:text-base max-w-3xl">
+                        Use estes materiais para divulgar os produtos e a empresa nas suas redes sociais: Instagram, Facebook, WhatsApp e muito mais.
+                    </p>
                 </div>
-                <div className="bg-green-100 text-brand-green-dark px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 w-full md:w-auto justify-center">
-                    <TrendingUpIcon /> Lucro de 100% na revenda
-                </div>
+                {isAdmin && (
+                    <button 
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="bg-brand-green-dark text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-opacity-90 transition flex items-center gap-2"
+                    >
+                        <PlusIcon /> Adicionar Material
+                    </button>
+                )}
             </header>
 
-            {/* Cards Principais */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                {/* Card de Lucro Estimado */}
-                <div className="bg-gradient-to-br from-green-600 to-brand-green-dark rounded-2xl p-6 text-white shadow-lg">
-                    <div className="flex items-center gap-3 mb-4 opacity-90">
-                        <div className="p-2 bg-white/20 rounded-lg"><BanknotesIcon /></div>
-                        <span className="font-medium">Lucro Estimado</span>
-                    </div>
-                    <p className="text-4xl font-bold mb-2">R$ {potentialProfit.toFixed(2).replace('.', ',')}</p>
-                    <p className="text-xs opacity-70">Baseado na venda de todas as unidades pelo preço sugerido.</p>
-                </div>
-
-                {/* Card de Faturamento Potencial */}
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4 text-gray-600">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><PresentationChartLineIcon /></div>
-                        <span className="font-medium">Faturamento Total (Potencial)</span>
-                    </div>
-                    <p className="text-3xl font-bold text-gray-800 mb-2">R$ {potentialRevenue.toFixed(2).replace('.', ',')}</p>
-                    <div className="flex items-center gap-2 text-sm text-green-600">
-                        <span className="bg-green-50 px-2 py-0.5 rounded">+100%</span>
-                        <span>sobre o investimento</span>
-                    </div>
-                </div>
-
-                 {/* Card de Investimento */}
-                 <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4 text-gray-600">
-                        <div className="p-2 bg-orange-50 text-orange-600 rounded-lg"><PackageIcon /></div>
-                        <span className="font-medium">Total Investido (Custo)</span>
-                    </div>
-                    <p className="text-3xl font-bold text-gray-800 mb-2">R$ {totalInvested.toFixed(2).replace('.', ',')}</p>
-                    <p className="text-xs text-gray-400">{totalBoxesPurchased} caixas adquiridas no total.</p>
-                </div>
+            {/* Filtro de Categorias */}
+            <div className="flex overflow-x-auto gap-2 mb-8 pb-2 no-scrollbar">
+                {categories.map(cat => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                            activeCategory === cat.id 
+                                ? 'bg-brand-green-dark text-white shadow-md' 
+                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                        }`}
+                    >
+                        {cat.label}
+                    </button>
+                ))}
             </div>
 
-            {/* Tabela de Histórico */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <h3 className="font-bold text-gray-800">Histórico de Pedidos</h3>
-                    <button className="text-sm text-brand-green-dark hover:underline font-medium">Exportar Relatório</button>
+            {/* Loading State */}
+            {isLoading ? (
+                <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div></div>
+            ) : (
+                /* Grid de Materiais */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredMaterials.length > 0 ? filteredMaterials.map((item) => (
+                        <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden group relative">
+                            
+                            {/* Botão de Delete (Admin Only) */}
+                            {isAdmin && (
+                                <button 
+                                    onClick={() => handleDeleteMaterial(item.id)}
+                                    className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-red-100 p-2 rounded-full text-red-500 shadow-sm backdrop-blur-sm transition-colors"
+                                    title="Excluir Material"
+                                >
+                                    <TrashIcon />
+                                </button>
+                            )}
+
+                            {item.type === 'image' ? (
+                                // Card de Imagem
+                                <>
+                                    <div className={`h-48 w-full bg-gray-100 flex items-center justify-center relative overflow-hidden`}>
+                                        {item.image_url ? (
+                                            <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                        ) : (
+                                            <PhotoIcon className="w-12 h-12 text-gray-300" />
+                                        )}
+                                        <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-bold uppercase">
+                                            Imagem
+                                        </div>
+                                    </div>
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <h3 className="font-bold text-gray-800 mb-1">{item.title}</h3>
+                                        <p className="text-sm text-gray-500 mb-4 flex-1">{item.description}</p>
+                                        <button 
+                                            onClick={() => handleDownload(item.image_url || '')}
+                                            className="w-full py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-brand-green-dark hover:text-white transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <DownloadIcon /> Baixar / Ver Imagem
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                // Card de Texto
+                                <>
+                                    <div className="p-5 bg-gray-50 border-b border-gray-100">
+                                        <div className="flex justify-between items-start">
+                                            <div className="bg-blue-100 text-blue-700 p-2 rounded-lg">
+                                                <ClipboardCopyIcon />
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-400 uppercase">Script</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <h3 className="font-bold text-gray-800 mb-2">{item.title}</h3>
+                                        <div className="bg-yellow-50 p-3 rounded-lg text-xs text-gray-600 font-mono mb-4 flex-1 border border-yellow-100 italic relative overflow-y-auto max-h-32">
+                                            "{item.content}"
+                                        </div>
+                                        <button 
+                                            onClick={() => handleCopy(item.content || '')}
+                                            className="w-full py-2 bg-brand-green-dark text-white rounded-lg text-sm font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <ClipboardCopyIcon /> Copiar Texto
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )) : (
+                        <div className="col-span-3 text-center py-12 text-gray-400">
+                            <p>Nenhum material encontrado nesta categoria.</p>
+                        </div>
+                    )}
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[600px]">
-                        <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
-                            <tr>
-                                <th className="p-5">Data</th>
-                                <th className="p-5">Pedido</th>
-                                <th className="p-5">Volume</th>
-                                <th className="p-5">Valor Investido</th>
-                                <th className="p-5">Lucro Previsto</th>
-                                <th className="p-5">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {transactions.map((t, i) => (
-                                <tr key={i} className="hover:bg-gray-50 transition-colors">
-                                    <td className="p-5 flex items-center gap-2 text-gray-600">
-                                        <CalendarIcon /> {t.date}
-                                    </td>
-                                    <td className="p-5 font-mono text-xs font-bold text-gray-500">{t.id}</td>
-                                    <td className="p-5 text-gray-800 font-medium">{t.boxes} cx ({t.boxes * 12} un)</td>
-                                    <td className="p-5 text-gray-600">R$ {t.total.toFixed(2).replace('.',',')}</td>
-                                    <td className="p-5 font-bold text-green-600">
-                                        + R$ {(t.total).toFixed(2).replace('.',',')}
-                                    </td>
-                                    <td className="p-5">
-                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                                            t.status === 'Entregue' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                        }`}>
-                                            {t.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            )}
+
+            {/* Modal de Adicionar Material (Admin) */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-fade-in">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800">Adicionar Novo Material</h3>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Tipo de Conteúdo</label>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => setNewMaterial({...newMaterial, type: 'image'})}
+                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'image' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 text-gray-600'}`}
+                                    >
+                                        Imagem (Post)
+                                    </button>
+                                    <button 
+                                        onClick={() => setNewMaterial({...newMaterial, type: 'text'})}
+                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'text' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 text-gray-600'}`}
+                                    >
+                                        Texto (Script)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Categoria</label>
+                                <select 
+                                    className="w-full border p-2 rounded"
+                                    value={newMaterial.category}
+                                    onChange={(e) => setNewMaterial({...newMaterial, category: e.target.value})}
+                                >
+                                    <option value="products">Produtos</option>
+                                    <option value="company">Empresa</option>
+                                    <option value="texts">Textos Prontos</option>
+                                    <option value="promo">Promoções</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 mb-1">Título do Material</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full border p-2 rounded"
+                                    placeholder="Ex: Card Promoção Copaíba"
+                                    value={newMaterial.title || ''}
+                                    onChange={(e) => setNewMaterial({...newMaterial, title: e.target.value})}
+                                />
+                            </div>
+
+                            {newMaterial.type === 'image' ? (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1">Link da Imagem (Imgur)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full border p-2 rounded"
+                                            placeholder="https://i.imgur.com/..."
+                                            value={newMaterial.image_url || ''}
+                                            onChange={(e) => setNewMaterial({...newMaterial, image_url: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1">Descrição Curta</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full border p-2 rounded"
+                                            placeholder="Ex: Use nos stories..."
+                                            value={newMaterial.description || ''}
+                                            onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
+                                        />
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1">Conteúdo do Texto</label>
+                                    <textarea 
+                                        className="w-full border p-2 rounded h-24"
+                                        placeholder="Digite o script de venda aqui..."
+                                        value={newMaterial.content || ''}
+                                        onChange={(e) => setNewMaterial({...newMaterial, content: e.target.value})}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Cancelar</button>
+                            <button onClick={handleAddMaterial} className="flex-1 py-3 bg-brand-green-dark text-white rounded-lg font-bold hover:bg-opacity-90">Salvar Material</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
 
 const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+// ... rest of the file (NewOrderScreen, DashboardShell, etc.) remains unchanged ...
+// Just verify the component closing tags are correct below.
     const { user } = useConsultant();
     const [boxes, setBoxes] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'pix'>('whatsapp');
@@ -844,7 +1156,7 @@ Aguardo dados PIX para pagamento.`;
 
 const DashboardShell: React.FC = () => {
     const { user, stats, signOut, consultants } = useConsultant();
-    const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'finance'>('home');
+    const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'materials'>('home');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -887,13 +1199,6 @@ const DashboardShell: React.FC = () => {
         setActiveTab(tab);
         setIsSidebarOpen(false);
     };
-
-    // Cálculo de Lucro Unitário para o Card Motivacional
-    // Custo: 210 / 12 = 17.50
-    // Venda: 35.00
-    // Lucro: 17.50
-    const PROFIT_PER_UNIT = BUSINESS_RULES.RETAIL_PRICE_PER_UNIT - (BUSINESS_RULES.BOX_PRICE / BUSINESS_RULES.UNITS_PER_BOX);
-    const DAYS_IN_MONTH = 30;
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col font-sans relative">
@@ -964,15 +1269,15 @@ const DashboardShell: React.FC = () => {
                         <ChartBarIcon /> Visão Geral
                     </button>
                     
+                    {/* O Admin também pode ver os materiais para editar */}
+                    <button onClick={() => handleNav('materials')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'materials' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                        <PhotoIcon /> Materiais para Redes Sociais
+                    </button>
+
                     {!isAdmin && (
-                        <>
-                            <button onClick={() => handleNav('finance')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'finance' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
-                                <BanknotesIcon /> Financeiro
-                            </button>
-                            <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
-                                <ShoppingCartIcon /> Fazer Pedido
-                            </button>
-                        </>
+                        <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
+                            <ShoppingCartIcon /> Fazer Pedido
+                        </button>
                     )}
                     
                      <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
@@ -1140,62 +1445,21 @@ const DashboardShell: React.FC = () => {
                             {/* Card de Carreira Removido conforme solicitado */}
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* NOVO CARD: Potencial de Ganhos e Metas */}
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col justify-between">
-                                    <div>
-                                        <div className="mb-4">
-                                            <h3 className="text-brand-green-dark font-bold text-lg mb-2 leading-tight">Seja dona do seu próprio negócio.</h3>
-                                            <p className="text-gray-500 text-xs mb-3">Você define onde vai atuar, quanto tempo vai dedicar ao seu negócio e quanto quer ganhar.</p>
-                                            <p className="text-green-700 font-bold text-xs uppercase flex items-center gap-1">
-                                                <SparklesIcon className="w-4 h-4" />
-                                                Veja as possibilidades de ganho que você poderá ter no mês.
-                                            </p>
-                                        </div>
-
-                                        {/* Cenário 1: Vendas -> Dinheiro */}
-                                        <div className="space-y-2 mb-5 bg-green-50 p-3 rounded-xl border border-green-100">
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 text-xs">Venda <strong>2</strong> pomadas por dia</span>
-                                                <span className="font-bold text-green-700">Ganhe R$ {(2 * DAYS_IN_MONTH * PROFIT_PER_UNIT).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 text-xs">Venda <strong>5</strong> pomadas por dia</span>
-                                                <span className="font-bold text-green-700">Ganhe R$ {(5 * DAYS_IN_MONTH * PROFIT_PER_UNIT).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 text-xs">Venda <strong>10</strong> pomadas por dia</span>
-                                                <span className="font-bold text-green-700">Ganhe R$ {(10 * DAYS_IN_MONTH * PROFIT_PER_UNIT).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Cenário 2: Dinheiro -> Vendas */}
-                                        <div className="border-t border-gray-100 pt-3">
-                                            <p className="text-gray-600 text-[11px] font-bold mb-2 text-center">Quanto você gostaria de ganhar por mês na Brotos da Terra?</p>
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-xs items-center">
-                                                    <span className="font-bold text-brand-green-dark">R$ 1.500,00</span>
-                                                    <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">venda ~3 pomadas por dia</span>
-                                                </div>
-                                                <div className="flex justify-between text-xs items-center">
-                                                    <span className="font-bold text-brand-green-dark">R$ 2.500,00</span>
-                                                    <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">venda ~5 pomadas por dia</span>
-                                                </div>
-                                                <div className="flex justify-between text-xs items-center">
-                                                    <span className="font-bold text-brand-green-dark">R$ 4.000,00</span>
-                                                    <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">venda ~8 pomadas por dia</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                {/* NOVO CARD INTERATIVO: Simulador de Ganhos */}
+                                <EarningsSimulator />
                                 
-                                <div onClick={() => setActiveTab('team')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                                {/* Card de Materiais para Redes Sociais (Novo Atalho no Dashboard) */}
+                                <div onClick={() => setActiveTab('materials')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group flex flex-col">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors"><UsersIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Gerenciar</span>
+                                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-100 transition-colors"><PhotoIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Novo</span>
                                     </div>
-                                    <h3 className="text-gray-500 font-medium text-sm">Minha Equipe</h3>
-                                    <p className="text-4xl font-bold text-gray-800 mt-1">{myTeam.length}</p>
+                                    <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Divulgação</h3>
+                                    <p className="text-2xl font-bold text-gray-800 mt-1 mb-2">Materiais Prontos</p>
+                                    <p className="text-xs text-gray-400 mt-auto">Posts, cards e textos para suas redes sociais.</p>
+                                    <button className="mt-4 w-full py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-bold hover:bg-purple-100 transition-colors">
+                                        Ver Materiais
+                                    </button>
                                 </div>
 
                                 <div onClick={handleOpenShop} className="bg-brand-green-dark text-white p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
@@ -1209,6 +1473,22 @@ const DashboardShell: React.FC = () => {
                                     <div className="absolute -bottom-4 -right-4 text-white/10 transform group-hover:scale-110 transition-transform duration-500">
                                         <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                     </div>
+                                </div>
+                            </div>
+                            
+                            {/* Atalho secundário para Minha Equipe */}
+                             <div className="mt-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-full"><UsersIcon /></div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-800">Minha Equipe</h3>
+                                            <p className="text-sm text-gray-500">Você possui {myTeam.length} consultores indicados.</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setActiveTab('team')} className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-bold text-sm hover:bg-gray-50">
+                                        Gerenciar Equipe
+                                    </button>
                                 </div>
                             </div>
                         </>
@@ -1260,8 +1540,8 @@ const DashboardShell: React.FC = () => {
                     </div>
                 )}
 
-                {/* Finance Tab */}
-                {activeTab === 'finance' && !isAdmin && <FinancialScreen />}
+                {/* Materials Tab (Aba de Materiais - Visível para todos, Editável para Admin) */}
+                {activeTab === 'materials' && <SocialMediaMaterialsScreen />}
 
                 {/* Shop Tab (Placeholder, as modal opens) */}
                 {activeTab === 'shop' && (
