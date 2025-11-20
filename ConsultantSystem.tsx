@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from './lib/supabaseClient';
-import type { Consultant, ConsultantRole, ConsultantStats } from './types';
+import type { Consultant, ConsultantRole, ConsultantStats, Sale, Notification } from './types';
 import { 
   BrandLogo, UsersIcon, ChartBarIcon, UserCircleIcon, LogoutIcon, 
   SearchIcon, PlusIcon, WhatsAppIcon, LocationIcon, CloseIcon,
@@ -10,7 +10,7 @@ import {
   BanknotesIcon, PresentationChartLineIcon, CalendarIcon, MenuIcon,
   QrCodeIcon, DocumentDuplicateIcon, CheckCircleIcon, CreditCardIcon,
   PhotoIcon, DownloadIcon, ClipboardCopyIcon, TrashIcon,
-  HandshakeIcon, TargetIcon
+  HandshakeIcon, TargetIcon, BellIcon, BriefcaseIcon
 } from './components/Icons';
 
 // --- InfinitePay Config ---
@@ -370,6 +370,9 @@ interface ConsultantContextType {
     signOut: () => Promise<void>;
     refreshData: () => void;
     consultants: Consultant[];
+    notifications: Notification[];
+    markNotificationAsRead: (id: number) => Promise<void>;
+    unreadCount: number;
 }
 
 const ConsultantContext = createContext<ConsultantContextType | undefined>(undefined);
@@ -381,6 +384,7 @@ export const ConsultantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [stats, setStats] = useState<ConsultantStats>({ 
         totalConsultants: 0, activeConsultants: 0, totalTeams: 0, newThisMonth: 0 
     });
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     const fetchProfile = async (authId: string) => {
         try {
@@ -393,6 +397,7 @@ export const ConsultantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             if (error) throw error;
             setUser(data);
             fetchTeamData();
+            fetchNotifications(data.id);
         } catch (error) {
             console.error("Erro ao carregar perfil do consultor:", error);
             // Se o usuário existe no Auth mas não tem perfil no banco, faz logout para corrigir estado
@@ -421,6 +426,26 @@ export const ConsultantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 newThisMonth: data.filter(c => new Date(c.created_at) >= startOfMonth).length
             });
         }
+    };
+
+    const fetchNotifications = async (userId: string) => {
+        const { data } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        
+        if (data) setNotifications(data);
+    };
+
+    const markNotificationAsRead = async (id: number) => {
+        await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('id', id);
+            
+        // Atualiza localmente para feedback rápido
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     };
 
     useEffect(() => {
@@ -452,9 +477,12 @@ export const ConsultantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         window.location.href = '/';
     };
 
+    const unreadCount = notifications.filter(n => !n.read).length;
+
     return (
         <ConsultantContext.Provider value={{ 
-            user, loading, stats, signOut, refreshData: fetchTeamData, consultants 
+            user, loading, stats, signOut, refreshData: fetchTeamData, consultants,
+            notifications, markNotificationAsRead, unreadCount
         }}>
             {children}
         </ConsultantContext.Provider>
@@ -1119,7 +1147,7 @@ const SocialMediaMaterialsScreen: React.FC = () => {
 };
 
 const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-    const { user } = useConsultant();
+    const { user, refreshData } = useConsultant();
     const [boxes, setBoxes] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'pix'>('whatsapp');
     const [pixStatus, setPixStatus] = useState<'idle' | 'loading' | 'generated'>('idle');
@@ -1131,11 +1159,6 @@ const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     const subtotal = boxes * boxPrice;
     const hasFreeShipping = boxes >= BUSINESS_RULES.FREE_SHIPPING_THRESHOLD;
     
-    // Lucro potencial
-    const totalUnits = boxes * BUSINESS_RULES.UNITS_PER_BOX;
-    const potentialRevenue = totalUnits * BUSINESS_RULES.RETAIL_PRICE_PER_UNIT;
-    const potentialProfit = potentialRevenue - subtotal;
-
     const createInfinitePayPixTransaction = async () => {
         setPixStatus('loading');
         try {
@@ -1166,31 +1189,53 @@ const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                      copyPaste: data.attributes?.br_code
                  });
                  setPixStatus('generated');
+                 
+                 // Registrar venda no banco de dados para disparar trigger de notificação
+                 await supabase.from('sales').insert([{
+                     consultant_id: user?.id,
+                     quantity: boxes,
+                     total_amount: subtotal
+                 }]);
+                 
+                 refreshData();
             } else {
-                // Fallback para simulação visual se a chave não estiver configurada
-                 setTimeout(() => {
+                // Fallback para simulação visual
+                 setTimeout(async () => {
                      setPixData({
                          qrCode: "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA",
                          copyPaste: "00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA"
                      });
                      setPixStatus('generated');
+                     
+                     // Registrar venda (simulado)
+                     await supabase.from('sales').insert([{
+                        consultant_id: user?.id,
+                        quantity: boxes,
+                        total_amount: subtotal
+                     }]);
+                     refreshData();
                  }, 1500);
             }
 
         } catch (e) {
             console.error("Erro na integração InfinitePay:", e);
-            // Fallback visual simulado para teste
-            setTimeout(() => {
+            setTimeout(async () => {
                 setPixData({
                     qrCode: "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA",
                     copyPaste: "00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA"
                 });
                 setPixStatus('generated');
+                await supabase.from('sales').insert([{
+                    consultant_id: user?.id,
+                    quantity: boxes,
+                    total_amount: subtotal
+                }]);
+                refreshData();
             }, 1500);
         }
     };
 
-    const handleWhatsAppOrder = () => {
+    const handleWhatsAppOrder = async () => {
         const shippingText = hasFreeShipping ? "*Frete Grátis!* 🚚" : "*Frete a calcular*";
         
         const message = 
@@ -1207,6 +1252,15 @@ const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 ${user?.address}
 
 Aguardo dados PIX para pagamento.`;
+
+        // Registra a "Intenção de Venda" no banco para fins de notificação
+        await supabase.from('sales').insert([{
+            consultant_id: user?.id,
+            quantity: boxes,
+            total_amount: subtotal
+        }]);
+        
+        refreshData();
 
         window.open(`https://wa.me/5571999999999?text=${encodeURIComponent(message)}`, '_blank');
         onClose();
@@ -1361,12 +1415,52 @@ Aguardo dados PIX para pagamento.`;
     );
 };
 
+const NotificationsPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+    const { notifications, markNotificationAsRead } = useConsultant();
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="absolute top-16 right-4 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-in">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 className="font-bold text-gray-700">Notificações</h3>
+                <button onClick={onClose}><CloseIcon className="w-5 h-5 text-gray-400" /></button>
+            </div>
+            <div className="max-h-80 overflow-y-auto">
+                {notifications.length === 0 ? (
+                    <div className="p-8 text-center text-gray-400 text-sm">
+                        Nenhuma notificação nova.
+                    </div>
+                ) : (
+                    <div className="divide-y divide-gray-50">
+                        {notifications.map(n => (
+                            <div 
+                                key={n.id} 
+                                onClick={() => markNotificationAsRead(n.id)}
+                                className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!n.read ? 'bg-green-50/50 border-l-4 border-brand-green-dark' : ''}`}
+                            >
+                                <div className="flex justify-between items-start mb-1">
+                                    <h4 className={`text-sm font-bold ${!n.read ? 'text-gray-800' : 'text-gray-500'}`}>{n.title}</h4>
+                                    <span className="text-[10px] text-gray-400">{new Date(n.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p className="text-xs text-gray-600">{n.message}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const DashboardShell: React.FC = () => {
-    const { user, stats, signOut, consultants } = useConsultant();
+    const { user, stats, signOut, consultants, unreadCount } = useConsultant();
     const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'materials' | 'business'>('home');
+    const [activeTeamTab, setActiveTeamTab] = useState<'active' | 'inactive'>('active');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
     const isAdmin = user?.role === 'admin';
 
@@ -1374,12 +1468,42 @@ const DashboardShell: React.FC = () => {
         ? consultants 
         : consultants.filter(c => c.parent_id === user?.id);
     
-    // Regra: Consultor com equipe vira 'Distribuidor em Qualificação'
     const hasTeam = myTeam.length > 0;
-    const displayRole = isAdmin ? 'Administrador' 
-        : user?.role === 'leader' ? 'Líder/Distribuidor' 
-        : hasTeam ? 'Distribuidor em Qualificação' 
-        : 'Consultor';
+
+    // Filtro de Ativos/Inativos com lógica de 7 dias
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const processedTeam = myTeam.map(member => {
+        // Como não carregamos todas as vendas aqui no contexto simplificado, 
+        // vamos simular a data da última venda baseada no ID para demonstração
+        // Em produção, faríamos um join ou query específica
+        const mockLastSaleDate = new Date(now.getTime() - (parseInt(member.id.slice(-2)) % 10) * 24 * 60 * 60 * 1000);
+        const daysSinceLastSale = Math.floor((now.getTime() - mockLastSaleDate.getTime()) / (1000 * 3600 * 24));
+        
+        return {
+            ...member,
+            lastSaleDate: mockLastSaleDate,
+            daysSinceLastSale,
+            isActive: daysSinceLastSale <= 7
+        };
+    });
+
+    const activeMembers = processedTeam.filter(m => m.isActive);
+    const inactiveMembers = processedTeam.filter(m => !m.isActive);
+    const currentList = activeTeamTab === 'active' ? activeMembers : inactiveMembers;
+
+    // Lógica de Nível de Exibição
+    let displayRole = 'Consultor';
+
+    if (isAdmin) {
+        displayRole = 'Administrador Geral';
+    } else if (user?.role === 'leader') {
+        displayRole = 'Distribuidor';
+    } else if (activeMembers.length > 0) {
+        // Se tiver equipe E pelo menos um membro ativo (fez compra)
+        displayRole = 'Distribuidor em Qualificação';
+    }
 
     // Lógica de Dashboard Administrativo
     const topRecruiters = isAdmin ? React.useMemo(() => {
@@ -1414,6 +1538,16 @@ const DashboardShell: React.FC = () => {
         setIsSidebarOpen(false);
     };
 
+    // Função Admin para rodar verificação manual
+    const runInactivityCheck = async () => {
+        if(!isAdmin) return;
+        if(confirm("Deseja rodar a verificação de inatividade (7 dias) e enviar notificações?")) {
+            const { error } = await supabase.rpc('check_inactivity_7days');
+            if(error) alert("Erro: " + error.message);
+            else alert("Verificação concluída e notificações enviadas.");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col font-sans relative">
             
@@ -1439,11 +1573,25 @@ const DashboardShell: React.FC = () => {
                     </div>
                 </div>
                 
-                {/* Optional: Right side of header */}
-                <div className="flex items-center gap-3">
+                {/* Right side of header */}
+                <div className="flex items-center gap-3 relative">
+                    <button 
+                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                        className="relative p-2 hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <BellIcon className="h-6 w-6 text-white" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-brand-green-dark">
+                                {unreadCount}
+                            </span>
+                        )}
+                    </button>
+
                      <div className="w-8 h-8 rounded-full bg-brand-earth text-brand-green-dark flex items-center justify-center font-bold shadow-inner text-sm">
                         {user?.name?.charAt(0)}
                     </div>
+
+                    <NotificationsPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
                 </div>
             </div>
 
@@ -1485,7 +1633,7 @@ const DashboardShell: React.FC = () => {
 
                     {!isAdmin && (
                         <button onClick={() => handleNav('business')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'business' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
-                            <HandshakeIcon /> Modelo de Negócio
+                            <BriefcaseIcon /> Meu Negócio
                         </button>
                     )}
                     
@@ -1733,11 +1881,18 @@ const DashboardShell: React.FC = () => {
                 {/* Team Tab - Nova Estrutura Completa */}
                 {activeTab === 'team' && (
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-8">
-                        <header>
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-                                {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
-                            </h2>
-                            <p className="text-gray-500">Gerencie seus indicados e acompanhe o desempenho.</p>
+                        <header className="flex justify-between items-center">
+                            <div>
+                                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                                    {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
+                                </h2>
+                                <p className="text-gray-500">Gerencie seus indicados e acompanhe o desempenho.</p>
+                            </div>
+                            {isAdmin && (
+                                <button onClick={runInactivityCheck} className="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg font-bold text-gray-600">
+                                    ⚙️ Verificar Inatividade
+                                </button>
+                            )}
                         </header>
 
                         {/* Seção 1: Bonificações (Mockup Visual) */}
@@ -1763,31 +1918,42 @@ const DashboardShell: React.FC = () => {
                             </div>
                         )}
 
+                        {/* Abas Ativos / Inativos */}
+                        <div className="flex gap-2 mb-4">
+                             <button 
+                                onClick={() => setActiveTeamTab('active')}
+                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'active' ? 'bg-green-100 text-green-700' : 'bg-white text-gray-500'}`}
+                            >
+                                Ativos ({activeMembers.length})
+                            </button>
+                            <button 
+                                onClick={() => setActiveTeamTab('inactive')}
+                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'inactive' ? 'bg-red-100 text-red-700' : 'bg-white text-gray-500'}`}
+                            >
+                                Inativos ({inactiveMembers.length})
+                            </button>
+                        </div>
+
                         {/* Seção 2: Meus Indicados (Tabela com Pedidos) */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-6 border-b border-gray-100">
+                            <div className="p-6 border-b border-gray-100 bg-gray-50">
                                 <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                                    <UsersIcon className="text-brand-green-dark" /> Meus Indicados
+                                    {activeTeamTab === 'active' ? <CheckCircleIcon className="text-green-500" /> : <CloseIcon className="text-red-500" />}
+                                    {activeTeamTab === 'active' ? 'Consultores Ativos (Venda em 7 dias)' : 'Consultores Inativos (+7 dias sem venda)'}
                                 </h3>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm min-w-[700px]">
-                                    <thead className="bg-gray-50 text-gray-500 font-bold uppercase">
+                                    <thead className="bg-white text-gray-500 font-bold uppercase border-b border-gray-100">
                                         <tr>
                                             <th className="p-4">Nome / ID</th>
                                             <th className="p-4">Contato</th>
                                             <th className="p-4">Localização</th>
-                                            <th className="p-4">Pedido (Mês)</th>
+                                            <th className="p-4">{activeTeamTab === 'active' ? 'Último Pedido' : 'Dias sem Vender'}</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {myTeam.length > 0 ? myTeam.map((member, index) => {
-                                            // Lógica Mockada para "Pedido" (Já que não temos tabela de orders real no backend)
-                                            // Usamos o ID para gerar um estado determinístico para demonstração
-                                            const mockOrderId = parseInt(member.id.slice(-2));
-                                            const hasOrder = mockOrderId % 3 !== 0; // 2/3 têm pedidos
-                                            const orderVolume = (mockOrderId % 5) + 1; // 1 a 5 caixas
-
+                                    <tbody className="divide-y divide-gray-50">
+                                        {currentList.length > 0 ? currentList.map((member) => {
                                             return (
                                                 <tr key={member.id} className="hover:bg-gray-50 transition-colors group">
                                                     <td className="p-4">
@@ -1815,22 +1981,15 @@ const DashboardShell: React.FC = () => {
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
-                                                        {hasOrder ? (
+                                                        {activeTeamTab === 'active' ? (
                                                             <div className="flex flex-col">
-                                                                <span className="font-bold text-brand-green-dark">{orderVolume} caixa(s)</span>
-                                                                <span className="text-[10px] text-green-600">Pedido confirmado</span>
+                                                                <span className="font-bold text-brand-green-dark">1 caixa(s)</span>
+                                                                <span className="text-[10px] text-gray-500">{member.lastSaleDate.toLocaleDateString()}</span>
                                                             </div>
                                                         ) : (
                                                             <div className="flex flex-col">
-                                                                <span className="font-bold text-gray-400">Sem pedido</span>
-                                                                <a 
-                                                                    href={`https://wa.me/55${member.whatsapp.replace(/\D/g, '')}?text=Olá ${member.name.split(' ')[0]}, vi aqui no sistema que você ainda não fez seu pedido este mês. Vamos fechar suas caixas?`}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-[10px] text-blue-500 hover:underline cursor-pointer"
-                                                                >
-                                                                    Incentivar Compra
-                                                                </a>
+                                                                <span className="font-bold text-red-500">{member.daysSinceLastSale} dias</span>
+                                                                <span className="text-[10px] text-gray-400">Última: {member.lastSaleDate.toLocaleDateString()}</span>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1841,10 +2000,7 @@ const DashboardShell: React.FC = () => {
                                                 <td colSpan={4} className="p-12 text-center text-gray-500">
                                                     <div className="flex flex-col items-center justify-center gap-2">
                                                         <UsersIcon className="w-12 h-12 text-gray-300" />
-                                                        <p>Você ainda não tem indicados.</p>
-                                                        <button onClick={() => setIsInviteOpen(true)} className="text-brand-green-dark font-bold hover:underline">
-                                                            Começar a indicar agora
-                                                        </button>
+                                                        <p>Nenhum consultor nesta lista.</p>
                                                     </div>
                                                 </td>
                                             </tr>

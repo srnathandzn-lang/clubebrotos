@@ -1,4 +1,3 @@
-
 // FIX: Import React to provide the React namespace for React.ReactNode.
 import type * as React from 'react';
 
@@ -26,4 +25,21 @@ export interface ConsultantStats {
     activeConsultants: number;
     totalTeams: number;
     newThisMonth: number;
+}
+
+export interface Sale {
+    id: number;
+    consultant_id: string;
+    quantity: number;
+    total_amount: number;
+    created_at: string;
+}
+
+export interface Notification {
+    id: number;
+    user_id: string;
+    title: string;
+    message: string;
+    read: boolean;
+    created_at: string;
 }
