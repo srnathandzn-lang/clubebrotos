@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from './lib/supabaseClient';
 import type { Consultant, ConsultantRole, ConsultantStats } from './types';
@@ -889,6 +888,13 @@ const DashboardShell: React.FC = () => {
         setIsSidebarOpen(false);
     };
 
+    // Cálculo de Lucro Unitário para o Card Motivacional
+    // Custo: 210 / 12 = 17.50
+    // Venda: 35.00
+    // Lucro: 17.50
+    const PROFIT_PER_UNIT = BUSINESS_RULES.RETAIL_PRICE_PER_UNIT - (BUSINESS_RULES.BOX_PRICE / BUSINESS_RULES.UNITS_PER_BOX);
+    const DAYS_IN_MONTH = 30;
+
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col font-sans relative">
             
@@ -1134,14 +1140,53 @@ const DashboardShell: React.FC = () => {
                             {/* Card de Carreira Removido conforme solicitado */}
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div onClick={() => setActiveTab('finance')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-green-50 text-green-600 rounded-xl group-hover:bg-green-100 transition-colors"><BanknotesIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Ver Detalhes</span>
+                                {/* NOVO CARD: Potencial de Ganhos e Metas */}
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col justify-between">
+                                    <div>
+                                        <div className="mb-4">
+                                            <h3 className="text-brand-green-dark font-bold text-lg mb-2 leading-tight">Seja dona do seu próprio negócio.</h3>
+                                            <p className="text-gray-500 text-xs mb-3">Você define onde vai atuar, quanto tempo vai dedicar ao seu negócio e quanto quer ganhar.</p>
+                                            <p className="text-green-700 font-bold text-xs uppercase flex items-center gap-1">
+                                                <SparklesIcon className="w-4 h-4" />
+                                                Veja as possibilidades de ganho que você poderá ter no mês.
+                                            </p>
+                                        </div>
+
+                                        {/* Cenário 1: Vendas -> Dinheiro */}
+                                        <div className="space-y-2 mb-5 bg-green-50 p-3 rounded-xl border border-green-100">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-gray-600 text-xs">Venda <strong>2</strong> pomadas por dia</span>
+                                                <span className="font-bold text-green-700">Ganhe R$ {(2 * DAYS_IN_MONTH * PROFIT_PER_UNIT).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-gray-600 text-xs">Venda <strong>5</strong> pomadas por dia</span>
+                                                <span className="font-bold text-green-700">Ganhe R$ {(5 * DAYS_IN_MONTH * PROFIT_PER_UNIT).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-gray-600 text-xs">Venda <strong>10</strong> pomadas por dia</span>
+                                                <span className="font-bold text-green-700">Ganhe R$ {(10 * DAYS_IN_MONTH * PROFIT_PER_UNIT).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Cenário 2: Dinheiro -> Vendas */}
+                                        <div className="border-t border-gray-100 pt-3">
+                                            <p className="text-gray-600 text-[11px] font-bold mb-2 text-center">Quanto você gostaria de ganhar por mês na Brotos da Terra?</p>
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between text-xs items-center">
+                                                    <span className="font-bold text-brand-green-dark">R$ 1.500,00</span>
+                                                    <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">venda ~3 pomadas por dia</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs items-center">
+                                                    <span className="font-bold text-brand-green-dark">R$ 2.500,00</span>
+                                                    <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">venda ~5 pomadas por dia</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs items-center">
+                                                    <span className="font-bold text-brand-green-dark">R$ 4.000,00</span>
+                                                    <span className="text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">venda ~8 pomadas por dia</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h3 className="text-gray-500 font-medium text-sm">Lucro Estimado</h3>
-                                    <p className="text-4xl font-bold text-gray-800 mt-1">R$ 3.360</p>
-                                    <p className="text-xs text-green-600 mt-2">Com base no histórico</p>
                                 </div>
                                 
                                 <div onClick={() => setActiveTab('team')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
@@ -1171,59 +1216,42 @@ const DashboardShell: React.FC = () => {
                     </div>
                 )}
 
-                {activeTab === 'finance' && !isAdmin && <FinancialScreen />}
-
+                {/* Team Tab */}
                 {activeTab === 'team' && (
                     <div className="max-w-5xl mx-auto animate-fade-in">
-                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                             <h2 className="text-2xl font-bold text-gray-800">
-                                 {isAdmin ? 'Administração de Consultores' : 'Gestão de Equipe'}
-                             </h2>
-                             <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="bg-brand-green-dark text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-opacity-90 transition w-full md:w-auto justify-center">
-                                 <PlusIcon /> {isAdmin ? 'Novo Consultor' : 'Novo Membro'}
-                             </button>
-                         </div>
-                        
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                            {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
+                        </h2>
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left min-w-[800px]">
-                                    <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase">
                                         <tr>
-                                            <th className="p-5">Consultor</th>
-                                            <th className="p-5">ID</th>
-                                            <th className="p-5">Contato</th>
-                                            <th className="p-5">Localização</th>
-                                            {isAdmin && <th className="p-5">Líder (ID)</th>}
-                                            <th className="p-5">Status</th>
+                                            <th className="p-4">Nome</th>
+                                            <th className="p-4">ID</th>
+                                            <th className="p-4">Status</th>
+                                            <th className="p-4">Contato</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {myTeam.length === 0 ? (
-                                            <tr><td colSpan={isAdmin ? 6 : 5} className="p-12 text-center text-gray-500">Nenhum consultor encontrado.</td></tr>
-                                        ) : (
-                                            myTeam.map(c => (
-                                                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                                                    <td className="p-5">
-                                                        <p className="font-bold text-gray-800">{c.name}</p>
-                                                        <p className="text-xs text-gray-400">{c.email}</p>
-                                                    </td>
-                                                    <td className="p-5">
-                                                        <span className="bg-gray-100 text-gray-600 font-mono text-xs px-2 py-1 rounded border border-gray-200">{c.id}</span>
-                                                    </td>
-                                                    <td className="p-5">
-                                                        <a href={`https://wa.me/55${c.whatsapp.replace(/\D/g,'')}`} target="_blank" className="flex items-center gap-1 text-green-600 hover:underline font-medium text-sm">
-                                                            <WhatsAppIcon /> {c.whatsapp}
-                                                        </a>
-                                                    </td>
-                                                    <td className="p-5 text-sm text-gray-500">{c.address}</td>
-                                                    {isAdmin && (
-                                                        <td className="p-5 text-sm text-gray-500">
-                                                            {c.parent_id === '000000' ? 'Direto' : c.parent_id || '-'}
-                                                        </td>
-                                                    )}
-                                                    <td className="p-5"><span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full">Ativo</span></td>
-                                                </tr>
-                                            ))
+                                        {myTeam.length > 0 ? myTeam.map(member => (
+                                            <tr key={member.id} className="hover:bg-gray-50">
+                                                <td className="p-4">
+                                                    <div className="font-bold text-gray-800">{member.name}</div>
+                                                    <div className="text-xs text-gray-400">{member.role}</div>
+                                                </td>
+                                                <td className="p-4 font-mono text-sm text-gray-500">{member.id}</td>
+                                                <td className="p-4">
+                                                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">Ativo</span>
+                                                </td>
+                                                <td className="p-4 text-sm text-gray-600">{member.whatsapp}</td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan={4} className="p-8 text-center text-gray-500">
+                                                    Nenhum consultor na equipe ainda.
+                                                </td>
+                                            </tr>
                                         )}
                                     </tbody>
                                 </table>
@@ -1232,85 +1260,59 @@ const DashboardShell: React.FC = () => {
                     </div>
                 )}
 
-                {activeTab === 'shop' && !isAdmin && (
-                    <div className="max-w-5xl mx-auto animate-fade-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Catálogo do Consultor</h2>
-                        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-center">
-                            <div className="w-full md:w-1/3 bg-gray-50 rounded-xl p-8 aspect-square flex items-center justify-center">
-                                 <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full object-contain mix-blend-multiply hover:scale-105 transition-transform duration-300" />
-                            </div>
-                            <div className="w-full md:w-2/3">
-                                <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                    <span className="bg-brand-green-dark text-white text-xs font-bold px-2 py-1 rounded uppercase">Carro Chefe</span>
-                                    <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded uppercase">Margem Alta</span>
-                                </div>
-                                <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Caixa Display - Pomada de Copaíba</h3>
-                                <p className="text-gray-500 mb-6 leading-relaxed text-sm md:text-base">
-                                    O produto campeão de vendas. Caixa display pronta para exposição no balcão, contendo 12 unidades da autêntica Pomada de Copaíba Brotos da Terra. Alívio imediato e fidelização garantida.
-                                </p>
-                                
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                        <p className="text-xs text-gray-500 uppercase font-bold">Você Paga</p>
-                                        <p className="text-xl md:text-2xl font-bold text-brand-green-dark">R$ 210,00</p>
-                                        <p className="text-[10px] md:text-xs text-gray-400">R$ 17,50 / unidade</p>
-                                    </div>
-                                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                                        <p className="text-xs text-green-600 uppercase font-bold">Preço Sugerido</p>
-                                        <p className="text-xl md:text-2xl font-bold text-green-700">R$ 420,00</p>
-                                        <p className="text-[10px] md:text-xs text-green-600">R$ 35,00 / unidade</p>
-                                    </div>
-                                </div>
+                {/* Finance Tab */}
+                {activeTab === 'finance' && !isAdmin && <FinancialScreen />}
 
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <button onClick={() => setIsOrderOpen(true)} className="flex-1 bg-brand-green-dark text-white font-bold py-4 rounded-xl hover:bg-opacity-90 shadow-lg transition-all flex items-center justify-center gap-2">
-                                        <ShoppingCartIcon /> Comprar Agora
-                                    </button>
-                                    <div className="flex-1 flex items-center justify-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-xl border border-gray-200 p-2">
-                                        <TruckIcon /> Frete grátis acima de 4 cxs
-                                    </div>
-                                </div>
-                            </div>
+                {/* Shop Tab (Placeholder, as modal opens) */}
+                {activeTab === 'shop' && (
+                    <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+                        <div className="bg-green-100 p-6 rounded-full mb-4">
+                             <ShoppingCartIcon />
                         </div>
+                        <h3 className="text-xl font-bold text-gray-800">Loja do Consultor</h3>
+                        <p className="text-gray-500 max-w-md mt-2">O catálogo de produtos foi aberto no formulário de pedido. Se fechou, clique abaixo para reabrir.</p>
+                        <button onClick={() => setIsOrderOpen(true)} className="mt-4 bg-brand-green-dark text-white px-6 py-2 rounded-lg font-bold">Abrir Pedido</button>
                     </div>
                 )}
+
             </main>
-            
-            <NewOrderScreen isOpen={isOrderOpen} onClose={() => setIsOrderOpen(false)} />
+
+            {/* Modals */}
+            <NewOrderScreen isOpen={isOrderOpen} onClose={() => {setIsOrderOpen(false); if(activeTab === 'shop') setActiveTab('home');}} />
             <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} myId={user?.id || ''} />
+
         </div>
     );
 };
 
-// --- 5. Ponto de Entrada ---
-
-export const ConsultantSystem: React.FC = () => {
+const MainContent: React.FC = () => {
     const { user, loading } = useConsultant();
-    const [referrerId, setReferrerId] = useState<string | null>(null);
-    const [manualRegister, setManualRegister] = useState(false);
+    const [view, setView] = useState<'login' | 'register'>('login');
+    const [referrerId, setReferrerId] = useState<string>('000000');
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref');
-        if (ref) setReferrerId(ref);
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
+        if (ref) {
+            setReferrerId(ref);
+            setView('register');
+        }
     }, []);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-brand-green-light text-brand-green-dark font-bold animate-pulse">Carregando Clube Brotos...</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div></div>;
 
-    // Roteamento: Tela de Cadastro
-    if (!user && (referrerId || manualRegister)) {
-        return <RegisterScreen 
-            referrerId={referrerId || '000000'} 
-            onBack={manualRegister ? () => setManualRegister(false) : undefined}
-        />;
+    if (!user) {
+        if (view === 'register') {
+            return <RegisterScreen referrerId={referrerId} onBack={() => setView('login')} />;
+        }
+        return <LoginScreen onSignup={() => setView('register')} />;
     }
 
-    // Roteamento: Dashboard (se logado) ou Login (se deslogado)
-    return user ? <DashboardShell /> : <LoginScreen onSignup={() => setManualRegister(true)} />;
+    return <DashboardShell />;
 };
 
 export const ConsultantApp: React.FC = () => (
     <ConsultantProvider>
-        <ConsultantSystem />
+        <MainContent />
     </ConsultantProvider>
 );
