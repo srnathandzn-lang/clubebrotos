@@ -10,7 +10,7 @@ import {
   BanknotesIcon, PresentationChartLineIcon, CalendarIcon, MenuIcon,
   QrCodeIcon, DocumentDuplicateIcon, CheckCircleIcon, CreditCardIcon,
   PhotoIcon, DownloadIcon, ClipboardCopyIcon, TrashIcon,
-  HandshakeIcon, TargetIcon, BellIcon, BriefcaseIcon
+  HandshakeIcon, TargetIcon, BellIcon, BriefcaseIcon, SunIcon, MoonIcon
 } from './components/Icons';
 
 // --- InfinitePay Config ---
@@ -38,6 +38,43 @@ interface MarketingMaterial {
     created_at?: string;
 }
 
+// --- Theme Context ---
+interface ThemeContextType {
+    theme: 'light' | 'dark';
+    toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>({ theme: 'light', toggleTheme: () => {} });
+
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark' || saved === 'light') return saved;
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        return 'light';
+    });
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
+
+    return (
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+            {children}
+        </ThemeContext.Provider>
+    );
+};
+
 // --- Componente de Simulação de Ganhos (Novo) ---
 const EarningsSimulator: React.FC = () => {
     // Regra: Lucro Unitário = R$ 17,50
@@ -53,15 +90,15 @@ const EarningsSimulator: React.FC = () => {
 
     // Cenários pré-definidos
     const scenarios = [
-        { sales: 2, label: "Inicial", color: "bg-blue-50 border-blue-200 text-blue-700" },
-        { sales: 5, label: "Focada", color: "bg-green-50 border-green-200 text-green-700" },
-        { sales: 10, label: "Visionária", color: "bg-purple-50 border-purple-200 text-purple-700" }
+        { sales: 2, label: "Inicial", color: "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300" },
+        { sales: 5, label: "Focada", color: "bg-green-50 border-green-200 text-green-700 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300" },
+        { sales: 10, label: "Visionária", color: "bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-300" }
     ];
 
     return (
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col transition-all hover:shadow-xl">
+        <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col transition-all hover:shadow-xl animate-fade-in">
             {/* Cabeçalho Motivacional */}
-            <div className="bg-brand-green-dark p-6 text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-brand-green-dark to-green-900 p-6 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
                     <SparklesIcon />
                 </div>
@@ -76,7 +113,7 @@ const EarningsSimulator: React.FC = () => {
             <div className="p-6 flex flex-col gap-8">
                 {/* Seção 1: Cenários de Vendas (Cards Visuais) */}
                 <div>
-                    <div className="flex items-center gap-2 mb-4 text-brand-green-dark font-bold text-sm uppercase tracking-wide">
+                    <div className="flex items-center gap-2 mb-4 text-brand-green-dark dark:text-green-400 font-bold text-sm uppercase tracking-wide">
                         <BanknotesIcon className="w-5 h-5" />
                         <span>Possibilidades de Ganho no Mês</span>
                     </div>
@@ -85,15 +122,15 @@ const EarningsSimulator: React.FC = () => {
                         {scenarios.map((scenario) => {
                             const monthlyProfit = scenario.sales * DAYS_IN_MONTH * PROFIT_PER_UNIT;
                             return (
-                                <div key={scenario.sales} className={`p-4 rounded-2xl border-2 ${scenario.color} transition-transform hover:-translate-y-1 cursor-default group`}>
+                                <div key={scenario.sales} className={`p-4 rounded-2xl border-2 ${scenario.color} transition-transform hover:-translate-y-1 cursor-default group backdrop-blur-sm`}>
                                     <div className="flex justify-between items-start mb-2">
                                         <span className="text-[10px] font-black uppercase opacity-70">{scenario.label}</span>
-                                        <span className="text-xs font-bold bg-white/60 px-2 py-1 rounded-full">
+                                        <span className="text-xs font-bold bg-white/60 dark:bg-black/20 px-2 py-1 rounded-full">
                                             {scenario.sales} / dia
                                         </span>
                                     </div>
                                     <div className="text-center mt-2">
-                                        <span className="text-xs text-gray-500 block mb-1">Lucro Mensal</span>
+                                        <span className="text-xs opacity-70 block mb-1">Lucro Mensal</span>
                                         <span className="text-xl md:text-2xl font-black tracking-tight">
                                             R$ {monthlyProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </span>
@@ -105,15 +142,15 @@ const EarningsSimulator: React.FC = () => {
                 </div>
 
                 {/* Divisor */}
-                <div className="border-t border-dashed border-gray-200"></div>
+                <div className="border-t border-dashed border-gray-200 dark:border-gray-700"></div>
 
                 {/* Seção 2: Calculadora Interativa (Slider) */}
                 <div>
                     <div className="flex items-center justify-between mb-6">
-                        <p className="text-gray-700 font-bold text-sm">
+                        <p className="text-gray-700 dark:text-gray-200 font-bold text-sm">
                             Quanto você gostaria de ganhar?
                         </p>
-                        <div className="bg-brand-green-light text-brand-green-dark px-4 py-1 rounded-full font-bold text-sm shadow-inner">
+                        <div className="bg-brand-green-light dark:bg-green-900/50 text-brand-green-dark dark:text-green-300 px-4 py-1 rounded-full font-bold text-sm shadow-inner">
                             Meta: R$ {financialGoal.toLocaleString('pt-BR')}
                         </div>
                     </div>
@@ -127,7 +164,7 @@ const EarningsSimulator: React.FC = () => {
                             step="100" 
                             value={financialGoal}
                             onChange={(e) => setFinancialGoal(Number(e.target.value))}
-                            className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-green-dark"
+                            className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-brand-green-dark dark:accent-green-500"
                         />
                         <div className="flex justify-between text-xs text-gray-400 mt-2 font-medium">
                             <span>R$ 500</span>
@@ -137,21 +174,21 @@ const EarningsSimulator: React.FC = () => {
                     </div>
 
                     {/* Resultado do Cálculo */}
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 flex items-center justify-between">
+                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 flex items-center justify-between transition-colors">
                         <div className="flex items-center gap-3">
-                            <div className="bg-white p-2 rounded-lg shadow-sm text-brand-green-dark">
+                            <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm text-brand-green-dark dark:text-green-400">
                                 <PackageIcon />
                             </div>
                             <div>
-                                <p className="text-xs text-gray-500 font-bold uppercase">Meta de Vendas</p>
-                                <p className="text-gray-800 text-sm leading-tight">Para atingir sua meta financeira.</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase">Meta de Vendas</p>
+                                <p className="text-gray-800 dark:text-gray-200 text-sm leading-tight">Para atingir sua meta financeira.</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <span className="block text-2xl font-black text-brand-green-dark">
+                            <span className="block text-2xl font-black text-brand-green-dark dark:text-green-400">
                                 ~{salesNeededPerDay}
                             </span>
-                            <span className="text-xs text-gray-500 font-medium">pomadas / dia</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">pomadas / dia</span>
                         </div>
                     </div>
                 </div>
@@ -167,7 +204,7 @@ const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrde
     return (
         <div className="max-w-5xl mx-auto animate-fade-in">
             {/* Hero Section */}
-            <div className="bg-brand-green-dark rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-2xl mb-8">
+            <div className="bg-gradient-to-r from-brand-green-dark to-green-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-2xl mb-8">
                 <div className="absolute top-0 right-0 opacity-10 transform translate-x-8 -translate-y-8">
                     <HandshakeIcon className="h-64 w-64" />
                 </div>
@@ -211,77 +248,77 @@ const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrde
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                 {/* Main Info */}
                 <div className="md:col-span-8">
-                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 h-full relative overflow-hidden">
+                    <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 h-full relative overflow-hidden transition-colors">
                         
                         {activeTab === 'sales' ? (
                             <div className="animate-fade-in">
                                 <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-12 h-12 bg-green-100 text-green-700 rounded-xl flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl flex items-center justify-center">
                                         <BanknotesIcon className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-bold text-gray-800 font-serif">Caminho da Venda</h3>
-                                        <p className="text-green-600 font-bold text-sm">Lucro imediato e autonomia</p>
+                                        <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-serif">Caminho da Venda</h3>
+                                        <p className="text-green-600 dark:text-green-400 font-bold text-sm">Lucro imediato e autonomia</p>
                                     </div>
                                 </div>
                                 
-                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
                                     Ideal para quem busca renda extra rápida ou quer fazer da venda de produtos sua atividade principal. 
                                     Aqui, o resultado depende exclusivamente do seu esforço diário.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> 100% de Lucro</h4>
-                                        <p className="text-xs text-gray-500">Compre no atacado e revenda com margem cheia. Dinheiro rápido no bolso.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> 100% de Lucro</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Compre no atacado e revenda com margem cheia. Dinheiro rápido no bolso.</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Zero Chefes</h4>
-                                        <p className="text-xs text-gray-500">Você define seus horários, suas rotas e sua estratégia de abordagem.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Zero Chefes</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Você define seus horários, suas rotas e sua estratégia de abordagem.</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Produto Validado</h4>
-                                        <p className="text-xs text-gray-500">Alta aceitação no mercado, facilitando a conversão de vendas.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Produto Validado</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Alta aceitação no mercado, facilitando a conversão de vendas.</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Material de Apoio</h4>
-                                        <p className="text-xs text-gray-500">Acesso ao nosso acervo de posts e scripts prontos para vender.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-green-200 dark:hover:border-green-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Material de Apoio</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Acesso ao nosso acervo de posts e scripts prontos para vender.</p>
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="animate-fade-in">
                                 <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center">
+                                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl flex items-center justify-center">
                                         <TrendingUpIcon className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-bold text-gray-800 font-serif">Caminho da Liderança</h3>
-                                        <p className="text-blue-600 font-bold text-sm">Escala, renda passiva e propósito</p>
+                                        <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-serif">Caminho da Liderança</h3>
+                                        <p className="text-blue-600 dark:text-blue-400 font-bold text-sm">Escala, renda passiva e propósito</p>
                                     </div>
                                 </div>
                                 
-                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
                                     Ideal para quem tem perfil empreendedor e deseja multiplicar seus ganhos ajudando outras pessoas a crescerem. 
                                     Torne-se um distribuidor e lidere sua própria organização.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Renda Passiva</h4>
-                                        <p className="text-xs text-gray-500">Ganhe uma porcentagem sobre a produtividade de toda a sua equipe.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Renda Passiva</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Ganhe uma porcentagem sobre a produtividade de toda a sua equipe.</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Sem Limites</h4>
-                                        <p className="text-xs text-gray-500">Não há teto de ganhos. Quanto maior seu time, maior seu faturamento.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Sem Limites</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Não há teto de ganhos. Quanto maior seu time, maior seu faturamento.</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Reconhecimento</h4>
-                                        <p className="text-xs text-gray-500">Prêmios exclusivos e destaque no ranking nacional de líderes.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Reconhecimento</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Prêmios exclusivos e destaque no ranking nacional de líderes.</p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
-                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Impacto</h4>
-                                        <p className="text-xs text-gray-500">Transforme a vida de outras pessoas oferecendo uma oportunidade real.</p>
+                                    <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
+                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Impacto</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Transforme a vida de outras pessoas oferecendo uma oportunidade real.</p>
                                     </div>
                                 </div>
                             </div>
@@ -303,18 +340,18 @@ const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrde
                         
                         <button 
                             onClick={activeTab === 'sales' ? onRequestOrder : onRequestInvite}
-                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-sm flex items-center justify-center gap-2"
+                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-sm flex items-center justify-center gap-2 hover:scale-[1.02]"
                         >
                             {activeTab === 'sales' ? <><ShoppingCartIcon /> Fazer Pedido</> : <><PlusIcon /> Convidar Agora</>}
                         </button>
                     </div>
 
-                    <div className="bg-yellow-50 border border-yellow-100 rounded-3xl p-6">
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800/50 rounded-3xl p-6">
                         <div className="flex items-start gap-3">
-                            <SparklesIcon className="text-yellow-600 w-6 h-6 shrink-0" />
+                            <SparklesIcon className="text-yellow-600 dark:text-yellow-400 w-6 h-6 shrink-0" />
                             <div>
-                                <h4 className="font-bold text-yellow-800 text-sm mb-1">Dica de Sucesso</h4>
-                                <p className="text-xs text-yellow-700 leading-relaxed">
+                                <h4 className="font-bold text-yellow-800 dark:text-yellow-200 text-sm mb-1">Dica de Sucesso</h4>
+                                <p className="text-xs text-yellow-700 dark:text-yellow-300/80 leading-relaxed">
                                     Você não precisa escolher apenas um! Os maiores líderes da Brotos começaram com vendas fortes e naturalmente atraíram pessoas para o negócio pelo seu exemplo.
                                 </p>
                             </div>
@@ -567,11 +604,11 @@ const RegisterScreen: React.FC<{ referrerId: string; onBack?: () => void }> = ({
     };
 
     return (
-        <div className="min-h-screen bg-brand-green-light flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full my-8 animate-fade-in">
+        <div className="min-h-screen bg-gradient-to-br from-brand-green-light to-green-200 dark:from-brand-dark-bg dark:to-brand-dark-card flex items-center justify-center p-4">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl max-w-md w-full my-8 animate-fade-in border border-white/20 dark:border-white/5">
                 <div className="flex justify-center mb-4"><BrandLogo /></div>
-                <h2 className="text-2xl font-bold text-center text-brand-green-dark mb-2">Cadastro Clube Brotos 🌱</h2>
-                <div className="bg-green-50 p-3 rounded-lg mb-6 text-center text-sm text-green-800 border border-green-200">
+                <h2 className="text-2xl font-bold text-center text-brand-green-dark dark:text-white mb-2 font-serif">Cadastro Clube Brotos 🌱</h2>
+                <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg mb-6 text-center text-sm text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800">
                     {referrerId === '000000' 
                         ? 'Cadastro direto (Administrativo)' 
                         : <span>Convite de ID: <strong>{referrerId}</strong></span>
@@ -580,65 +617,65 @@ const RegisterScreen: React.FC<{ referrerId: string; onBack?: () => void }> = ({
 
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
-                        <label className="text-xs font-bold uppercase text-gray-500">Nome Completo</label>
-                        <input required type="text" className="w-full border p-2 rounded" 
+                        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Nome Completo</label>
+                        <input required type="text" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" 
                             value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
                          <div>
-                            <label className="text-xs font-bold uppercase text-gray-500">WhatsApp</label>
-                            <input required type="text" className="w-full border p-2 rounded" placeholder="(XX) XXXXX-XXXX"
+                            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">WhatsApp</label>
+                            <input required type="text" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" placeholder="(XX) XXXXX-XXXX"
                                 value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} />
                         </div>
                         <div>
-                            <label className="text-xs font-bold uppercase text-gray-500">CPF / CNPJ</label>
-                            <input required type="text" className="w-full border p-2 rounded" 
+                            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">CPF / CNPJ</label>
+                            <input required type="text" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" 
                                 value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} />
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-xs font-bold uppercase text-gray-500">Endereço</label>
-                        <input required type="text" className="w-full border p-2 rounded" placeholder="Rua, Número, Bairro"
+                        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Endereço</label>
+                        <input required type="text" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" placeholder="Rua, Número, Bairro"
                             value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-bold uppercase text-gray-500">Cidade</label>
-                            <input required type="text" className="w-full border p-2 rounded" 
+                            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Cidade</label>
+                            <input required type="text" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" 
                                 value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
                         </div>
                         <div>
-                            <label className="text-xs font-bold uppercase text-gray-500">Estado</label>
-                            <input required type="text" className="w-full border p-2 rounded" maxLength={2} placeholder="UF"
+                            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Estado</label>
+                            <input required type="text" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" maxLength={2} placeholder="UF"
                                 value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} />
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-xs font-bold uppercase text-gray-500">E-mail (Login)</label>
-                        <input required type="email" className="w-full border p-2 rounded" 
+                        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">E-mail (Login)</label>
+                        <input required type="email" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" 
                             value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                     </div>
                     <div>
-                        <label className="text-xs font-bold uppercase text-gray-500">Senha de Acesso</label>
-                        <input required type="password" className="w-full border p-2 rounded" minLength={6}
+                        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Senha de Acesso</label>
+                        <input required type="password" className="w-full bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 p-2 rounded-lg focus:ring-2 focus:ring-brand-green-dark dark:text-white transition-all" minLength={6}
                             value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
                     </div>
 
-                    {error && <div className="bg-red-50 p-3 rounded border border-red-100 text-red-600 text-sm font-medium text-center">{error}</div>}
+                    {error && <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded border border-red-100 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium text-center">{error}</div>}
 
-                    <button disabled={loading} type="submit" className="w-full bg-brand-green-dark text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition-all">
+                    <button disabled={loading} type="submit" className="w-full bg-brand-green-dark text-white font-bold py-3 rounded-xl hover:bg-opacity-90 transition-all shadow-lg hover:shadow-green-900/20 transform active:scale-[0.98]">
                         {loading ? 'Registrando...' : 'Finalizar Cadastro'}
                     </button>
                 </form>
                 <div className="mt-4 text-center">
                     {onBack ? (
-                        <button onClick={onBack} className="text-sm text-gray-500 hover:underline">Voltar para Login</button>
+                        <button onClick={onBack} className="text-sm text-gray-500 dark:text-gray-400 hover:underline">Voltar para Login</button>
                     ) : (
-                        <a href="/" className="text-sm text-gray-500 hover:underline">Já tenho ID? Fazer Login</a>
+                        <a href="/" className="text-sm text-gray-500 dark:text-gray-400 hover:underline">Já tenho ID? Fazer Login</a>
                     )}
                 </div>
             </div>
@@ -729,58 +766,61 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-green-light flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border-t-4 border-brand-green-dark">
+        <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center flex items-center justify-center p-4 relative">
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-brand-green-dark/80 dark:bg-black/80 backdrop-blur-sm"></div>
+            
+            <div className="bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center border border-white/20 dark:border-white/5 relative z-10 animate-fade-in">
                 <div className="flex justify-center mb-6 transform hover:scale-105 transition-transform"><BrandLogo /></div>
-                <h2 className="text-3xl font-serif font-bold text-brand-green-dark mb-1">Clube Brotos 🌱</h2>
-                <p className="text-gray-500 mb-8 text-sm">Área restrita para consultores.</p>
+                <h2 className="text-3xl font-serif font-bold text-brand-green-dark dark:text-white mb-1">Clube Brotos 🌱</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-8 text-sm tracking-wide">Área restrita para consultores.</p>
                 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div className="text-left group">
-                        <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">ID de Consultor</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">ID de Consultor</label>
                         <div className="relative">
                             <input 
                                 type="text" required placeholder={placeholderId}
                                 value={id} onChange={(e) => setId(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-green-dark focus:border-transparent outline-none transition-all font-mono"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/20 focus:ring-2 focus:ring-brand-green-dark dark:text-white outline-none transition-all font-mono"
                             />
                         </div>
                     </div>
                     <div className="text-left">
-                        <label className="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">Sua Senha</label>
+                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide">Sua Senha</label>
                         <input 
                             type="password" required
                             value={password} onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-green-dark focus:border-transparent outline-none transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/20 focus:ring-2 focus:ring-brand-green-dark dark:text-white outline-none transition-all"
                         />
                     </div>
                     
-                    {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center justify-center gap-2 border border-red-100"><ShieldCheckIcon /> {error}</div>}
+                    {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg flex items-center justify-center gap-2 border border-red-100 dark:border-red-800"><ShieldCheckIcon /> {error}</div>}
                     
                     <button 
                         disabled={loading}
                         type="submit"
-                        className="w-full bg-brand-green-dark text-white font-bold py-4 rounded-lg hover:bg-[#1e3d1d] transition-all shadow-lg hover:shadow-xl"
+                        className="w-full bg-brand-green-dark text-white font-bold py-4 rounded-xl hover:bg-green-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.99]"
                     >
                         {loading ? 'Acessando...' : 'Entrar no Sistema'}
                     </button>
                 </form>
                 
-                <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-                    <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">ou</span></div>
+                <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-gray-700"></div></div>
+                    <div className="relative flex justify-center text-sm"><span className="px-2 bg-transparent text-gray-500 dark:text-gray-400">ou</span></div>
                 </div>
 
                 <button 
                     onClick={onSignup}
-                    className="w-full bg-white text-brand-green-dark border-2 border-brand-green-dark font-bold py-3 rounded-lg hover:bg-green-50 transition-all"
+                    className="w-full bg-white dark:bg-transparent text-brand-green-dark dark:text-green-400 border-2 border-brand-green-dark dark:border-green-500 font-bold py-3 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 transition-all"
                 >
                     Quero ser um Consultor
                 </button>
                 
                 <button 
                     onClick={handleSetupAdmin}
-                    className="mt-6 text-xs text-gray-400 hover:text-brand-green-dark underline transition-colors"
+                    className="mt-8 text-xs text-gray-400 hover:text-brand-green-dark dark:hover:text-green-400 underline transition-colors"
                 >
                     Configurar Admin (Primeiro Acesso)
                 </button>
@@ -795,20 +835,20 @@ const InviteModal: React.FC<{ isOpen: boolean; onClose: () => void; myId: string
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center animate-fade-in">
-                <div className="w-16 h-16 bg-green-100 text-brand-green-dark rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+            <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-2xl w-full max-w-md p-6 text-center animate-fade-in border border-gray-100 dark:border-gray-700">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-brand-green-dark dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                     <PlusIcon />
                 </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-800">Expandir Equipe</h3>
-                <p className="text-gray-600 mb-6 text-sm">Envie este link para um novo consultor. O sistema identificará você como líder e gerará o ID dele automaticamente.</p>
+                <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-white">Expandir Equipe</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">Envie este link para um novo consultor. O sistema identificará você como líder e gerará o ID dele automaticamente.</p>
                 
-                <div className="bg-gray-50 p-4 rounded-lg break-all font-mono text-sm mb-4 border border-dashed border-gray-300 text-gray-600">
+                <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl break-all font-mono text-sm mb-6 border border-dashed border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300">
                     {inviteLink}
                 </div>
                 
-                <div className="flex gap-2">
-                    <button onClick={onClose} className="flex-1 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Fechar</button>
-                    <button onClick={() => {navigator.clipboard.writeText(inviteLink); alert('Link copiado!');}} className="flex-1 py-3 bg-brand-green-dark text-white rounded-lg font-bold hover:bg-opacity-90 transition-colors shadow-md">Copiar Link</button>
+                <div className="flex gap-3">
+                    <button onClick={onClose} className="flex-1 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors">Fechar</button>
+                    <button onClick={() => {navigator.clipboard.writeText(inviteLink); alert('Link copiado!');}} className="flex-1 py-3 bg-brand-green-dark text-white rounded-xl font-bold hover:bg-opacity-90 transition-colors shadow-md">Copiar Link</button>
                 </div>
             </div>
         </div>
@@ -929,8 +969,8 @@ const SocialMediaMaterialsScreen: React.FC = () => {
             {/* Header da Seção */}
             <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="text-center md:text-left">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Acervo de Posts para Divulgação</h2>
-                    <p className="text-gray-500 text-sm md:text-base max-w-3xl">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2 font-serif">Acervo de Posts para Divulgação</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base max-w-3xl">
                         Use estes materiais para divulgar os produtos e a empresa nas suas redes sociais: Instagram, Facebook, WhatsApp e muito mais.
                     </p>
                 </div>
@@ -953,7 +993,7 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                         className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
                             activeCategory === cat.id 
                                 ? 'bg-brand-green-dark text-white shadow-md' 
-                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                     >
                         {cat.label}
@@ -968,13 +1008,13 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                 /* Grid de Materiais */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredMaterials.length > 0 ? filteredMaterials.map((item) => (
-                        <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col overflow-hidden group relative">
+                        <div key={item.id} className="bg-white dark:bg-brand-dark-card rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-lg transition-all flex flex-col overflow-hidden group relative">
                             
                             {/* Botão de Delete (Admin Only) */}
                             {isAdmin && (
                                 <button 
                                     onClick={() => handleDeleteMaterial(item.id)}
-                                    className="absolute top-2 right-2 z-10 bg-white/80 hover:bg-red-100 p-2 rounded-full text-red-500 shadow-sm backdrop-blur-sm transition-colors"
+                                    className="absolute top-2 right-2 z-10 bg-white/80 dark:bg-black/50 hover:bg-red-100 p-2 rounded-full text-red-500 shadow-sm backdrop-blur-sm transition-colors"
                                     title="Excluir Material"
                                 >
                                     <TrashIcon />
@@ -984,7 +1024,7 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                             {item.type === 'image' ? (
                                 // Card de Imagem
                                 <>
-                                    <div className={`h-48 w-full bg-gray-100 flex items-center justify-center relative overflow-hidden group-hover:bg-gray-200 transition-colors`}>
+                                    <div className={`h-48 w-full bg-gray-100 dark:bg-black/30 flex items-center justify-center relative overflow-hidden group-hover:bg-gray-200 transition-colors`}>
                                         {item.image_url ? (
                                             <img 
                                                 src={formatImgurUrl(item.image_url)} 
@@ -1004,11 +1044,11 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col">
-                                        <h3 className="font-bold text-gray-800 mb-1">{item.title}</h3>
-                                        <p className="text-sm text-gray-500 mb-4 flex-1">{item.description}</p>
+                                        <h3 className="font-bold text-gray-800 dark:text-white mb-1">{item.title}</h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex-1">{item.description}</p>
                                         <button 
                                             onClick={() => handleDownload(item.image_url || '')}
-                                            className="w-full py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-brand-green-dark hover:text-white transition-colors flex items-center justify-center gap-2"
+                                            className="w-full py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-brand-green-dark hover:text-white dark:hover:bg-brand-green-dark transition-colors flex items-center justify-center gap-2"
                                         >
                                             <DownloadIcon /> Baixar / Ver Imagem
                                         </button>
@@ -1017,17 +1057,17 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                             ) : (
                                 // Card de Texto
                                 <>
-                                    <div className="p-5 bg-gray-50 border-b border-gray-100">
+                                    <div className="p-5 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                                         <div className="flex justify-between items-start">
-                                            <div className="bg-blue-100 text-blue-700 p-2 rounded-lg">
+                                            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 p-2 rounded-lg">
                                                 <ClipboardCopyIcon />
                                             </div>
                                             <span className="text-xs font-bold text-gray-400 uppercase">Script</span>
                                         </div>
                                     </div>
                                     <div className="p-5 flex-1 flex flex-col">
-                                        <h3 className="font-bold text-gray-800 mb-2">{item.title}</h3>
-                                        <div className="bg-yellow-50 p-3 rounded-lg text-xs text-gray-600 font-mono mb-4 flex-1 border border-yellow-100 italic relative overflow-y-auto max-h-32">
+                                        <h3 className="font-bold text-gray-800 dark:text-white mb-2">{item.title}</h3>
+                                        <div className="bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-lg text-xs text-gray-600 dark:text-gray-400 font-mono mb-4 flex-1 border border-yellow-100 dark:border-yellow-800 italic relative overflow-y-auto max-h-32">
                                             "{item.content}"
                                         </div>
                                         <button 
@@ -1051,22 +1091,22 @@ const SocialMediaMaterialsScreen: React.FC = () => {
             {/* Modal de Adicionar Material (Admin) */}
             {isAddModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-fade-in">
-                        <h3 className="text-xl font-bold mb-4 text-gray-800">Adicionar Novo Material</h3>
+                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-fade-in">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Adicionar Novo Material</h3>
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1">Tipo de Conteúdo</label>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Tipo de Conteúdo</label>
                                 <div className="flex gap-2">
                                     <button 
                                         onClick={() => setNewMaterial({...newMaterial, type: 'image'})}
-                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'image' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 text-gray-600'}`}
+                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'image' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
                                     >
                                         Imagem (Post)
                                     </button>
                                     <button 
                                         onClick={() => setNewMaterial({...newMaterial, type: 'text'})}
-                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'text' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 text-gray-600'}`}
+                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'text' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
                                     >
                                         Texto (Script)
                                     </button>
@@ -1074,9 +1114,9 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1">Categoria</label>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Categoria</label>
                                 <select 
-                                    className="w-full border p-2 rounded"
+                                    className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
                                     value={newMaterial.category}
                                     onChange={(e) => setNewMaterial({...newMaterial, category: e.target.value})}
                                 >
@@ -1088,10 +1128,10 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 mb-1">Título do Material</label>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Título do Material</label>
                                 <input 
                                     type="text" 
-                                    className="w-full border p-2 rounded"
+                                    className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
                                     placeholder="Ex: Card Promoção Copaíba"
                                     value={newMaterial.title || ''}
                                     onChange={(e) => setNewMaterial({...newMaterial, title: e.target.value})}
@@ -1101,10 +1141,10 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                             {newMaterial.type === 'image' ? (
                                 <>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 mb-1">Link da Imagem (Imgur)</label>
+                                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Link da Imagem (Imgur)</label>
                                         <input 
                                             type="text" 
-                                            className="w-full border p-2 rounded"
+                                            className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
                                             placeholder="Cole o link do post do Imgur aqui"
                                             value={newMaterial.image_url || ''}
                                             onChange={(e) => setNewMaterial({...newMaterial, image_url: e.target.value})}
@@ -1112,10 +1152,10 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                                         <p className="text-[10px] text-gray-400 mt-1">O sistema ajustará automaticamente links do Imgur.</p>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 mb-1">Descrição Curta</label>
+                                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Descrição Curta</label>
                                         <input 
                                             type="text" 
-                                            className="w-full border p-2 rounded"
+                                            className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
                                             placeholder="Ex: Use nos stories..."
                                             value={newMaterial.description || ''}
                                             onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
@@ -1124,9 +1164,9 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                                 </>
                             ) : (
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 mb-1">Conteúdo do Texto</label>
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Conteúdo do Texto</label>
                                     <textarea 
-                                        className="w-full border p-2 rounded h-24"
+                                        className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded h-24 dark:text-white"
                                         placeholder="Digite o script de venda aqui..."
                                         value={newMaterial.content || ''}
                                         onChange={(e) => setNewMaterial({...newMaterial, content: e.target.value})}
@@ -1136,7 +1176,7 @@ const SocialMediaMaterialsScreen: React.FC = () => {
                         </div>
 
                         <div className="flex gap-2 mt-6">
-                            <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Cancelar</button>
+                            <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium">Cancelar</button>
                             <button onClick={handleAddMaterial} className="flex-1 py-3 bg-brand-green-dark text-white rounded-lg font-bold hover:bg-opacity-90">Salvar Material</button>
                         </div>
                     </div>
@@ -1268,7 +1308,7 @@ Aguardo dados PIX para pagamento.`;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slide-up">
                 <div className="bg-brand-green-dark p-4 flex justify-between items-center text-white shadow-md shrink-0">
                     <h3 className="text-lg font-bold flex items-center gap-2"><ShoppingCartIcon /> Novo Pedido</h3>
                     <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1 transition"><CloseIcon className="h-6 w-6 text-white" /></button>
@@ -1278,33 +1318,33 @@ Aguardo dados PIX para pagamento.`;
                     {/* Produto Principal */}
                     <div className="flex flex-col md:flex-row gap-6 mb-8">
                         <div className="w-full md:w-1/3">
-                            <div className="bg-gray-100 rounded-xl p-4 flex items-center justify-center aspect-square mb-2">
-                                <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full h-full object-contain mix-blend-multiply" />
+                            <div className="bg-gray-100 dark:bg-black/20 rounded-xl p-4 flex items-center justify-center aspect-square mb-2">
+                                <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
                             </div>
-                            <p className="text-center text-xs text-gray-500">Imagem ilustrativa</p>
+                            <p className="text-center text-xs text-gray-500 dark:text-gray-400">Imagem ilustrativa</p>
                         </div>
                         
                         <div className="w-full md:w-2/3 flex flex-col justify-between">
                             <div>
                                 <div className="flex justify-between items-start mb-2">
-                                    <h4 className="text-xl font-bold text-gray-800">Caixa Display - Pomada Copaíba</h4>
-                                    <span className="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">Atacado</span>
+                                    <h4 className="text-xl font-bold text-gray-800 dark:text-white">Caixa Display - Pomada Copaíba</h4>
+                                    <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-bold px-2 py-1 rounded-full">Atacado</span>
                                 </div>
-                                <p className="text-gray-500 text-sm mb-4">Contém 12 unidades de 15g cada. Fórmula original Brotos da Terra.</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Contém 12 unidades de 15g cada. Fórmula original Brotos da Terra.</p>
                                 
-                                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-100 mb-4">
-                                    <span className="text-gray-600 text-sm">Preço por Caixa:</span>
-                                    <span className="text-xl font-bold text-brand-green-dark">R$ {boxPrice.toFixed(2).replace('.',',')}</span>
+                                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 mb-4">
+                                    <span className="text-gray-600 dark:text-gray-300 text-sm">Preço por Caixa:</span>
+                                    <span className="text-xl font-bold text-brand-green-dark dark:text-green-400">R$ {boxPrice.toFixed(2).replace('.',',')}</span>
                                 </div>
                             </div>
 
                             {/* Seletor de Quantidade */}
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Quantidade de Caixas</label>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Quantidade de Caixas</label>
                                 <div className="flex items-center gap-4 mb-4">
-                                    <button onClick={() => setBoxes(Math.max(1, boxes - 1))} className="w-12 h-12 flex items-center justify-center bg-gray-200 rounded-xl hover:bg-gray-300 font-bold text-xl transition text-gray-600">-</button>
-                                    <div className="flex-1 bg-white border-2 border-gray-200 rounded-xl h-12 flex items-center justify-center">
-                                        <span className="text-2xl font-bold text-brand-green-dark">{boxes}</span>
+                                    <button onClick={() => setBoxes(Math.max(1, boxes - 1))} className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-xl transition text-gray-600 dark:text-gray-200">-</button>
+                                    <div className="flex-1 bg-white dark:bg-black/20 border-2 border-gray-200 dark:border-gray-700 rounded-xl h-12 flex items-center justify-center">
+                                        <span className="text-2xl font-bold text-brand-green-dark dark:text-green-400">{boxes}</span>
                                     </div>
                                     <button onClick={() => setBoxes(boxes + 1)} className="w-12 h-12 flex items-center justify-center bg-brand-green-dark text-white rounded-xl hover:bg-opacity-90 font-bold text-xl transition">+</button>
                                 </div>
@@ -1315,16 +1355,16 @@ Aguardo dados PIX para pagamento.`;
                     {/* Regras e Benefícios */}
                     <div className="mb-6">
                         {/* Frete */}
-                        <div className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${hasFreeShipping ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'}`}>
-                            <div className={`p-2 rounded-full ${hasFreeShipping ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-500'}`}>
+                        <div className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${hasFreeShipping ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'}`}>
+                            <div className={`p-2 rounded-full ${hasFreeShipping ? 'bg-green-500 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'}`}>
                                 <TruckIcon />
                             </div>
                             <div>
-                                <p className={`font-bold text-sm ${hasFreeShipping ? 'text-green-700' : 'text-gray-600'}`}>
+                                <p className={`font-bold text-sm ${hasFreeShipping ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
                                     {hasFreeShipping ? 'Frete Grátis Aplicado!' : 'Frete não incluso'}
                                 </p>
                                 {!hasFreeShipping && (
-                                    <p className="text-xs text-gray-500">Faltam {BUSINESS_RULES.FREE_SHIPPING_THRESHOLD - boxes} caixas para frete grátis.</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">Faltam {BUSINESS_RULES.FREE_SHIPPING_THRESHOLD - boxes} caixas para frete grátis.</p>
                                 )}
                             </div>
                         </div>
@@ -1332,17 +1372,17 @@ Aguardo dados PIX para pagamento.`;
 
                     {/* Método de Pagamento Tabs */}
                     <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-700 mb-3">Forma de Pagamento</label>
-                        <div className="flex bg-gray-100 p-1 rounded-xl">
+                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Forma de Pagamento</label>
+                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
                             <button 
                                 onClick={() => setPaymentMethod('whatsapp')}
-                                className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === 'whatsapp' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500'}`}
+                                className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === 'whatsapp' ? 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
                             >
                                 <WhatsAppIcon /> Negociar (WhatsApp)
                             </button>
                             <button 
                                 onClick={() => setPaymentMethod('pix')}
-                                className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === 'pix' ? 'bg-white text-brand-green-dark shadow-sm' : 'text-gray-500'}`}
+                                className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === 'pix' ? 'bg-white dark:bg-gray-700 text-brand-green-dark dark:text-green-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
                             >
                                 <QrCodeIcon className="w-5 h-5" /> Pagar Online (PIX)
                             </button>
@@ -1351,15 +1391,15 @@ Aguardo dados PIX para pagamento.`;
 
                     {/* Conteúdo de Pagamento */}
                     {paymentMethod === 'whatsapp' ? (
-                         <div className="bg-green-50 rounded-xl p-4 border border-green-100 mb-6 text-center">
-                            <p className="text-green-800 font-medium mb-2">Você será redirecionado para o WhatsApp Oficial.</p>
-                            <p className="text-sm text-green-600">Lá, nossa equipe confirmará o estoque e enviará os dados bancários manualmente.</p>
+                         <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-100 dark:border-green-900/50 mb-6 text-center">
+                            <p className="text-green-800 dark:text-green-300 font-medium mb-2">Você será redirecionado para o WhatsApp Oficial.</p>
+                            <p className="text-sm text-green-600 dark:text-green-400">Lá, nossa equipe confirmará o estoque e enviará os dados bancários manualmente.</p>
                         </div>
                     ) : (
-                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 mb-6">
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-6">
                             {pixStatus === 'idle' && (
                                 <div className="text-center py-4">
-                                    <p className="text-gray-600 mb-4">Pague com PIX Automático (InfinitePay) e seu pedido será processado imediatamente.</p>
+                                    <p className="text-gray-600 dark:text-gray-300 mb-4">Pague com PIX Automático (InfinitePay) e seu pedido será processado imediatamente.</p>
                                     <button onClick={createInfinitePayPixTransaction} className="bg-brand-green-dark text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-opacity-90 transition-all w-full">
                                         Gerar Código PIX
                                     </button>
@@ -1368,22 +1408,22 @@ Aguardo dados PIX para pagamento.`;
                             {pixStatus === 'loading' && (
                                 <div className="text-center py-8">
                                     <div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                                    <p className="text-gray-500 text-sm">Gerando pagamento seguro...</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Gerando pagamento seguro...</p>
                                 </div>
                             )}
                             {pixStatus === 'generated' && (
                                 <div className="text-center">
-                                    <p className="text-sm text-gray-500 mb-3">Escaneie o QR Code abaixo:</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Escaneie o QR Code abaixo:</p>
                                     <div className="bg-white p-2 inline-block rounded-lg shadow-sm mb-4 border border-gray-200">
                                         <img src={pixData.qrCode} alt="QR Code Pix" className="w-48 h-48 object-contain" />
                                     </div>
-                                    <div className="bg-white border border-gray-300 rounded-lg p-3 flex items-center gap-2 mb-4">
-                                        <input type="text" readOnly value={pixData.copyPaste} className="w-full text-xs text-gray-500 bg-transparent outline-none font-mono truncate" />
-                                        <button onClick={() => {navigator.clipboard.writeText(pixData.copyPaste); alert('Copiado!');}} className="text-brand-green-dark hover:bg-green-50 p-2 rounded transition">
+                                    <div className="bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 rounded-lg p-3 flex items-center gap-2 mb-4">
+                                        <input type="text" readOnly value={pixData.copyPaste} className="w-full text-xs text-gray-500 dark:text-gray-300 bg-transparent outline-none font-mono truncate" />
+                                        <button onClick={() => {navigator.clipboard.writeText(pixData.copyPaste); alert('Copiado!');}} className="text-brand-green-dark dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 p-2 rounded transition">
                                             <DocumentDuplicateIcon className="w-5 h-5" />
                                         </button>
                                     </div>
-                                    <div className="flex items-center justify-center gap-2 text-sm text-green-600 font-bold bg-green-50 p-2 rounded-lg">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
                                         <CheckCircleIcon /> Aguardando pagamento...
                                     </div>
                                 </div>
@@ -1392,10 +1432,10 @@ Aguardo dados PIX para pagamento.`;
                     )}
 
                     {/* Resumo Financeiro */}
-                    <div className="border-t border-gray-200 pt-4 mb-6">
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-6">
                         <div className="flex justify-between items-center">
-                            <span className="font-bold text-gray-800 text-lg">Total a Pagar:</span>
-                            <span className="font-bold text-brand-green-dark text-2xl">R$ {subtotal.toFixed(2).replace('.',',')}</span>
+                            <span className="font-bold text-gray-800 dark:text-white text-lg">Total a Pagar:</span>
+                            <span className="font-bold text-brand-green-dark dark:text-green-400 text-2xl">R$ {subtotal.toFixed(2).replace('.',',')}</span>
                         </div>
                     </div>
 
@@ -1405,7 +1445,7 @@ Aguardo dados PIX para pagamento.`;
                         </button>
                     )}
                     {paymentMethod === 'pix' && pixStatus === 'generated' && (
-                         <button onClick={onClose} className="w-full bg-gray-200 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-300 transition-all">
+                         <button onClick={onClose} className="w-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white py-4 rounded-xl font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">
                             Já paguei (Fechar)
                         </button>
                     )}
@@ -1421,9 +1461,9 @@ const NotificationsPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
     if (!isOpen) return null;
 
     return (
-        <div className="absolute top-16 right-4 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-in">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 className="font-bold text-gray-700">Notificações</h3>
+        <div className="absolute top-16 right-4 w-80 bg-white dark:bg-brand-dark-card rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-fade-in">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
+                <h3 className="font-bold text-gray-700 dark:text-white">Notificações</h3>
                 <button onClick={onClose}><CloseIcon className="w-5 h-5 text-gray-400" /></button>
             </div>
             <div className="max-h-80 overflow-y-auto">
@@ -1432,18 +1472,18 @@ const NotificationsPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                         Nenhuma notificação nova.
                     </div>
                 ) : (
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-gray-50 dark:divide-gray-800">
                         {notifications.map(n => (
                             <div 
                                 key={n.id} 
                                 onClick={() => markNotificationAsRead(n.id)}
-                                className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!n.read ? 'bg-green-50/50 border-l-4 border-brand-green-dark' : ''}`}
+                                className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${!n.read ? 'bg-green-50/50 dark:bg-green-900/20 border-l-4 border-brand-green-dark' : ''}`}
                             >
                                 <div className="flex justify-between items-start mb-1">
-                                    <h4 className={`text-sm font-bold ${!n.read ? 'text-gray-800' : 'text-gray-500'}`}>{n.title}</h4>
+                                    <h4 className={`text-sm font-bold ${!n.read ? 'text-gray-800 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>{n.title}</h4>
                                     <span className="text-[10px] text-gray-400">{new Date(n.created_at).toLocaleDateString()}</span>
                                 </div>
-                                <p className="text-xs text-gray-600">{n.message}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-300">{n.message}</p>
                             </div>
                         ))}
                     </div>
@@ -1455,6 +1495,7 @@ const NotificationsPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = (
 
 const DashboardShell: React.FC = () => {
     const { user, stats, signOut, consultants, unreadCount } = useConsultant();
+    const { theme, toggleTheme } = useContext(ThemeContext);
     const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'materials' | 'business'>('home');
     const [activeTeamTab, setActiveTeamTab] = useState<'active' | 'inactive'>('active');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
@@ -1549,7 +1590,7 @@ const DashboardShell: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col font-sans relative">
+        <div className="min-h-screen bg-gray-50 dark:bg-brand-dark-bg flex flex-col font-sans relative transition-colors duration-300">
             
             {/* Overlay for Menu (Visible on all screens when open) */}
             {isSidebarOpen && (
@@ -1560,15 +1601,15 @@ const DashboardShell: React.FC = () => {
             )}
 
             {/* Universal Header (Visible on all screens) */}
-            <div className="bg-brand-green-dark text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
+            <div className="bg-white/90 dark:bg-brand-dark-card/90 text-brand-text dark:text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-sm backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
                  <div className="flex items-center gap-4">
                     <button 
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors"
                     >
-                        <MenuIcon className="h-8 w-8 text-white" />
+                        <MenuIcon className="h-8 w-8 text-brand-green-dark dark:text-white" />
                     </button>
-                    <div className="h-10 w-auto bg-white rounded-lg px-2 py-1 flex items-center justify-center">
+                    <div className="h-10 w-auto flex items-center justify-center">
                         <BrandLogo className="h-8 w-auto" />
                     </div>
                 </div>
@@ -1576,18 +1617,25 @@ const DashboardShell: React.FC = () => {
                 {/* Right side of header */}
                 <div className="flex items-center gap-3 relative">
                     <button 
-                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                        className="relative p-2 hover:bg-white/10 rounded-full transition-colors"
+                        onClick={toggleTheme}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors text-gray-600 dark:text-gray-300"
                     >
-                        <BellIcon className="h-6 w-6 text-white" />
+                        {theme === 'light' ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
+                    </button>
+
+                    <button 
+                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                        className="relative p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+                    >
+                        <BellIcon className="h-6 w-6 text-brand-green-dark dark:text-white" />
                         {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-brand-green-dark">
+                            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-brand-dark-card">
                                 {unreadCount}
                             </span>
                         )}
                     </button>
 
-                     <div className="w-8 h-8 rounded-full bg-brand-earth text-brand-green-dark flex items-center justify-center font-bold shadow-inner text-sm">
+                     <div className="w-8 h-8 rounded-full bg-brand-earth text-white flex items-center justify-center font-bold shadow-md text-sm">
                         {user?.name?.charAt(0)}
                     </div>
 
@@ -1597,7 +1645,7 @@ const DashboardShell: React.FC = () => {
 
             {/* Sidebar Navigation (Off-canvas Drawer) */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark text-white flex flex-col shadow-2xl 
+                fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark dark:bg-brand-dark-card text-white flex flex-col shadow-2xl 
                 transform transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
@@ -1614,7 +1662,7 @@ const DashboardShell: React.FC = () => {
                         <div className="p-2 bg-white rounded-lg shadow-lg w-full flex justify-center"><BrandLogo /></div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl backdrop-blur-sm border border-white/10">
-                        <div className="w-10 h-10 rounded-full bg-brand-earth text-brand-green-dark flex items-center justify-center font-bold shadow-inner flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-brand-earth text-white flex items-center justify-center font-bold shadow-inner flex-shrink-0">
                             {user?.name?.charAt(0)}
                         </div>
                         <div className="overflow-hidden">
@@ -1627,43 +1675,43 @@ const DashboardShell: React.FC = () => {
                     </div>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <button onClick={() => handleNav('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                    <button onClick={() => handleNav('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
                         <ChartBarIcon /> Visão Geral
                     </button>
 
                     {!isAdmin && (
-                        <button onClick={() => handleNav('business')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'business' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                        <button onClick={() => handleNav('business')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'business' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
                             <BriefcaseIcon /> Meu Negócio
                         </button>
                     )}
                     
                     {/* O Admin também pode ver os materiais para editar */}
-                    <button onClick={() => handleNav('materials')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'materials' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                    <button onClick={() => handleNav('materials')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'materials' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
                         <PhotoIcon /> Materiais para Redes Sociais
                     </button>
 
                     {!isAdmin && (
-                        <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
+                        <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
                             <ShoppingCartIcon /> Fazer Pedido
                         </button>
                     )}
                     
                     {/* A aba de equipe só aparece para o admin ou para quem tem indicados (hasTeam) */}
                     {(isAdmin || hasTeam) && (
-                        <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                        <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
                             <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
                         </button>
                     )}
                     
                     <div className="pt-4 mt-4 border-t border-white/10">
                         <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
-                        <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
+                        <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-green-300 font-bold transition-colors">
                             <PlusIcon /> Convidar Consultor
                         </button>
                     </div>
                 </nav>
                 <div className="p-4 bg-black/10">
-                    <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-200 transition-colors"><LogoutIcon /> Sair do Sistema</button>
+                    <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 text-red-200 transition-colors"><LogoutIcon /> Sair do Sistema</button>
                 </div>
             </aside>
 
@@ -1671,8 +1719,8 @@ const DashboardShell: React.FC = () => {
                 {activeTab === 'home' && (
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
                         <header className="mb-4 md:mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Olá, {user?.name.split(' ')[0]}! 👋</h2>
-                            <p className="text-gray-500 text-sm md:text-base whitespace-pre-line">
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2 font-serif">Olá, {user?.name.split(' ')[0]}! 👋</h2>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base whitespace-pre-line">
                                 {isAdmin 
                                     ? "Visão geral e monitoramento do sistema Brotos da Terra."
                                     : "Parabéns pela decisão de se tornar uma consultora de vendas independente.\n\nAgora você pode construir seu negócio de sucesso de duas formas; como uma consultora de vendas e também como uma distribuidora independente de vendas."
@@ -1685,34 +1733,34 @@ const DashboardShell: React.FC = () => {
                             <div className="space-y-8">
                                 {/* 1. Cards de KPI (Key Performance Indicators) */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                    <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><UsersIcon /></div>
-                                            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded flex items-center gap-1"><TrendingUpIcon /> Total</span>
+                                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl"><UsersIcon /></div>
+                                            <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded flex items-center gap-1"><TrendingUpIcon /> Total</span>
                                         </div>
-                                        <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Total Consultores</h3>
-                                        <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalConsultants}</p>
+                                        <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Total Consultores</h3>
+                                        <p className="text-3xl font-bold text-gray-800 dark:text-white mt-1">{stats.totalConsultants}</p>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                    <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-green-50 text-green-600 rounded-xl"><PlusIcon /></div>
-                                            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">Mensal</span>
+                                            <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl"><PlusIcon /></div>
+                                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Mensal</span>
                                         </div>
-                                        <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Novos em {new Date().toLocaleString('default', { month: 'long' })}</h3>
-                                        <p className="text-3xl font-bold text-gray-800 mt-1">{stats.newThisMonth}</p>
+                                        <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Novos em {new Date().toLocaleString('default', { month: 'long' })}</h3>
+                                        <p className="text-3xl font-bold text-gray-800 dark:text-white mt-1">{stats.newThisMonth}</p>
                                     </div>
 
-                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                                    <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><UserCircleIcon /></div>
-                                            <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded">Ativos</span>
+                                            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl"><UserCircleIcon /></div>
+                                            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded">Ativos</span>
                                         </div>
-                                        <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Líderes de Equipe</h3>
-                                        <p className="text-3xl font-bold text-gray-800 mt-1">{stats.totalTeams}</p>
+                                        <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Líderes de Equipe</h3>
+                                        <p className="text-3xl font-bold text-gray-800 dark:text-white mt-1">{stats.totalTeams}</p>
                                     </div>
 
-                                    <div className="bg-gradient-to-br from-brand-green-dark to-green-800 p-6 rounded-2xl shadow-lg text-white">
+                                    <div className="bg-gradient-to-br from-brand-green-dark to-green-800 dark:from-green-900 dark:to-black p-6 rounded-2xl shadow-lg text-white">
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="p-3 bg-white/20 rounded-xl"><BanknotesIcon /></div>
                                         </div>
@@ -1727,14 +1775,14 @@ const DashboardShell: React.FC = () => {
                                     {/* Coluna Esquerda: Ranking e Gráfico (Visual) */}
                                     <div className="lg:col-span-2 space-y-6">
                                         {/* Tabela de Últimos Cadastros */}
-                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                                                <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm md:text-base"><CalendarIcon /> Últimos Cadastros</h3>
-                                                <button onClick={() => setActiveTab('team')} className="text-sm text-brand-green-dark hover:underline">Ver todos</button>
+                                        <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                                            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                                                <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 text-sm md:text-base"><CalendarIcon /> Últimos Cadastros</h3>
+                                                <button onClick={() => setActiveTab('team')} className="text-sm text-brand-green-dark dark:text-green-400 hover:underline">Ver todos</button>
                                             </div>
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-left text-sm min-w-[500px]">
-                                                    <thead className="bg-gray-50 text-gray-500 font-bold uppercase">
+                                                    <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold uppercase">
                                                         <tr>
                                                             <th className="p-4">Nome</th>
                                                             <th className="p-4">ID</th>
@@ -1742,13 +1790,13 @@ const DashboardShell: React.FC = () => {
                                                             <th className="p-4">Cidade</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody className="divide-y divide-gray-100">
+                                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                                                         {recentSignups.map(c => (
-                                                            <tr key={c.id} className="hover:bg-gray-50">
-                                                                <td className="p-4 font-medium text-gray-800">{c.name}</td>
-                                                                <td className="p-4 text-gray-500 font-mono">{c.id}</td>
-                                                                <td className="p-4 text-gray-500">{new Date(c.created_at).toLocaleDateString()}</td>
-                                                                <td className="p-4 text-gray-500 truncate max-w-[150px]">{c.address?.split('-')[1] || 'N/A'}</td>
+                                                            <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                                                <td className="p-4 font-medium text-gray-800 dark:text-gray-200">{c.name}</td>
+                                                                <td className="p-4 text-gray-500 dark:text-gray-400 font-mono">{c.id}</td>
+                                                                <td className="p-4 text-gray-500 dark:text-gray-400">{new Date(c.created_at).toLocaleDateString()}</td>
+                                                                <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{c.address?.split('-')[1] || 'N/A'}</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
@@ -1757,13 +1805,13 @@ const DashboardShell: React.FC = () => {
                                         </div>
 
                                         {/* Gráfico Simulado de Crescimento */}
-                                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                            <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2 text-sm md:text-base"><PresentationChartLineIcon /> Crescimento da Rede (Semestral)</h3>
+                                        <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                                            <h3 className="font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 text-sm md:text-base"><PresentationChartLineIcon /> Crescimento da Rede (Semestral)</h3>
                                             <div className="h-48 flex items-end justify-between gap-2 px-2">
                                                 {[35, 45, 40, 60, 75, 90].map((height, i) => (
                                                     <div key={i} className="w-full flex flex-col items-center gap-2 group">
                                                         <div 
-                                                            className="w-full bg-green-100 rounded-t-lg group-hover:bg-brand-green-dark transition-all duration-500 relative" 
+                                                            className="w-full bg-green-100 dark:bg-green-900/30 rounded-t-lg group-hover:bg-brand-green-dark dark:group-hover:bg-green-500 transition-all duration-500 relative" 
                                                             style={{height: `${height}%`}}
                                                         >
                                                             <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1780,27 +1828,27 @@ const DashboardShell: React.FC = () => {
                                     </div>
 
                                     {/* Coluna Direita: Top Líderes */}
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-fit">
-                                        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-yellow-50 to-white">
-                                            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-yellow-700 text-sm md:text-base">
+                                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 h-fit">
+                                        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-yellow-50 to-white dark:from-yellow-900/10 dark:to-transparent">
+                                            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 text-yellow-700 dark:text-yellow-400 text-sm md:text-base">
                                                 <SparklesIcon /> Top Recrutadores
                                             </h3>
                                         </div>
                                         <div className="p-2">
                                             {topRecruiters.length > 0 ? topRecruiters.map((leader, idx) => (
-                                                <div key={leader.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-xl transition-colors border-b border-gray-50 last:border-0">
+                                                <div key={leader.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0">
                                                     <div className={`
                                                         w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0
-                                                        ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : idx === 1 ? 'bg-gray-200 text-gray-600' : idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-gray-50 text-gray-400'}
+                                                        ${idx === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : idx === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' : idx === 2 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'}
                                                     `}>
                                                         {idx + 1}º
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="font-bold text-gray-800 text-sm truncate">{leader.name}</p>
+                                                        <p className="font-bold text-gray-800 dark:text-white text-sm truncate">{leader.name}</p>
                                                         <p className="text-xs text-gray-400">ID: {leader.id}</p>
                                                     </div>
                                                     <div className="text-right shrink-0">
-                                                        <p className="font-bold text-brand-green-dark">{leader.count}</p>
+                                                        <p className="font-bold text-brand-green-dark dark:text-green-400">{leader.count}</p>
                                                         <p className="text-[10px] text-gray-400 uppercase">Indicados</p>
                                                     </div>
                                                 </div>
@@ -1814,27 +1862,25 @@ const DashboardShell: React.FC = () => {
                         ) : (
                         /* VISÃO DO CONSULTOR */
                         <>
-                            {/* Card de Carreira Removido conforme solicitado */}
-
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* NOVO CARD INTERATIVO: Simulador de Ganhos */}
                                 <EarningsSimulator />
                                 
                                 {/* Card de Materiais para Redes Sociais (Novo Atalho no Dashboard) */}
-                                <div onClick={() => setActiveTab('materials')} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group flex flex-col">
+                                <div onClick={() => setActiveTab('materials')} className="bg-white dark:bg-brand-dark-card p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer group flex flex-col">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl group-hover:bg-purple-100 transition-colors"><PhotoIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded">Novo</span>
+                                        <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 transition-colors"><PhotoIcon /></div>
+                                        <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 px-2 py-1 rounded">Novo</span>
                                     </div>
-                                    <h3 className="text-gray-500 font-medium text-sm uppercase tracking-wider">Divulgação</h3>
-                                    <p className="text-2xl font-bold text-gray-800 mt-1 mb-2">Materiais Prontos</p>
+                                    <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Divulgação</h3>
+                                    <p className="text-2xl font-bold text-gray-800 dark:text-white mt-1 mb-2">Materiais Prontos</p>
                                     <p className="text-xs text-gray-400 mt-auto">Posts, cards e textos para suas redes sociais.</p>
-                                    <button className="mt-4 w-full py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-bold hover:bg-purple-100 transition-colors">
+                                    <button className="mt-4 w-full py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors">
                                         Ver Materiais
                                     </button>
                                 </div>
 
-                                <div onClick={handleOpenShop} className="bg-brand-green-dark text-white p-6 rounded-2xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
+                                <div onClick={handleOpenShop} className="bg-brand-green-dark dark:bg-green-900 text-white p-6 rounded-3xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
                                     <div className="relative z-10">
                                         <h3 className="font-bold text-xl mb-1">Fazer Pedido</h3>
                                         <p className="text-white/70 text-sm mb-4">Reabasteça seu estoque com preço de atacado.</p>
@@ -1850,16 +1896,16 @@ const DashboardShell: React.FC = () => {
                             
                             {/* Atalho secundário para Minha Equipe (Aparece apenas se tiver indicados) */}
                             {hasTeam && (
-                             <div className="mt-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                             <div className="mt-6 bg-white dark:bg-brand-dark-card p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-blue-50 text-blue-600 rounded-full"><UsersIcon /></div>
+                                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full"><UsersIcon /></div>
                                         <div>
-                                            <h3 className="font-bold text-gray-800">Minha Equipe</h3>
-                                            <p className="text-sm text-gray-500">Você possui {myTeam.length} consultores indicados.</p>
+                                            <h3 className="font-bold text-gray-800 dark:text-white">Minha Equipe</h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Você possui {myTeam.length} consultores indicados.</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => setActiveTab('team')} className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 font-bold text-sm hover:bg-gray-50">
+                                    <button onClick={() => setActiveTab('team')} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
                                         Gerenciar Equipe
                                     </button>
                                 </div>
@@ -1883,13 +1929,13 @@ const DashboardShell: React.FC = () => {
                     <div className="max-w-5xl mx-auto animate-fade-in space-y-8">
                         <header className="flex justify-between items-center">
                             <div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">
                                     {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
                                 </h2>
-                                <p className="text-gray-500">Gerencie seus indicados e acompanhe o desempenho.</p>
+                                <p className="text-gray-500 dark:text-gray-400">Gerencie seus indicados e acompanhe o desempenho.</p>
                             </div>
                             {isAdmin && (
-                                <button onClick={runInactivityCheck} className="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg font-bold text-gray-600">
+                                <button onClick={runInactivityCheck} className="text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-3 py-1 rounded-lg font-bold text-gray-600 dark:text-gray-200">
                                     ⚙️ Verificar Inatividade
                                 </button>
                             )}
@@ -1897,7 +1943,7 @@ const DashboardShell: React.FC = () => {
 
                         {/* Seção 1: Bonificações (Mockup Visual) */}
                         {!isAdmin && hasTeam && (
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-black text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 opacity-10 transform translate-x-8 -translate-y-8">
                                     <BanknotesIcon className="w-48 h-48" />
                                 </div>
@@ -1922,29 +1968,29 @@ const DashboardShell: React.FC = () => {
                         <div className="flex gap-2 mb-4">
                              <button 
                                 onClick={() => setActiveTeamTab('active')}
-                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'active' ? 'bg-green-100 text-green-700' : 'bg-white text-gray-500'}`}
+                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-white dark:bg-brand-dark-card text-gray-500 dark:text-gray-400'}`}
                             >
                                 Ativos ({activeMembers.length})
                             </button>
                             <button 
                                 onClick={() => setActiveTeamTab('inactive')}
-                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'inactive' ? 'bg-red-100 text-red-700' : 'bg-white text-gray-500'}`}
+                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'inactive' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : 'bg-white dark:bg-brand-dark-card text-gray-500 dark:text-gray-400'}`}
                             >
                                 Inativos ({inactiveMembers.length})
                             </button>
                         </div>
 
                         {/* Seção 2: Meus Indicados (Tabela com Pedidos) */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 bg-gray-50">
-                                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                        <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+                            <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                                <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
                                     {activeTeamTab === 'active' ? <CheckCircleIcon className="text-green-500" /> : <CloseIcon className="text-red-500" />}
                                     {activeTeamTab === 'active' ? 'Consultores Ativos (Venda em 7 dias)' : 'Consultores Inativos (+7 dias sem venda)'}
                                 </h3>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm min-w-[700px]">
-                                    <thead className="bg-white text-gray-500 font-bold uppercase border-b border-gray-100">
+                                    <thead className="bg-white dark:bg-brand-dark-card text-gray-500 dark:text-gray-400 font-bold uppercase border-b border-gray-100 dark:border-gray-800">
                                         <tr>
                                             <th className="p-4">Nome / ID</th>
                                             <th className="p-4">Contato</th>
@@ -1952,12 +1998,12 @@ const DashboardShell: React.FC = () => {
                                             <th className="p-4">{activeTeamTab === 'active' ? 'Último Pedido' : 'Dias sem Vender'}</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50">
+                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                                         {currentList.length > 0 ? currentList.map((member) => {
                                             return (
-                                                <tr key={member.id} className="hover:bg-gray-50 transition-colors group">
+                                                <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
                                                     <td className="p-4">
-                                                        <div className="font-bold text-gray-800">{member.name}</div>
+                                                        <div className="font-bold text-gray-800 dark:text-white">{member.name}</div>
                                                         <div className="text-xs text-gray-400 font-mono">ID: {member.id}</div>
                                                     </td>
                                                     <td className="p-4">
@@ -1965,12 +2011,12 @@ const DashboardShell: React.FC = () => {
                                                             href={`https://wa.me/55${member.whatsapp.replace(/\D/g, '')}`} 
                                                             target="_blank" 
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-lg text-xs font-bold transition-colors"
+                                                            className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg text-xs font-bold transition-colors"
                                                         >
                                                             <WhatsAppIcon /> Falar
                                                         </a>
                                                     </td>
-                                                    <td className="p-4 text-gray-600">
+                                                    <td className="p-4 text-gray-600 dark:text-gray-400">
                                                         <div className="flex items-center gap-1">
                                                             <LocationIcon />
                                                             <span className="truncate max-w-[150px]">
@@ -1983,8 +2029,8 @@ const DashboardShell: React.FC = () => {
                                                     <td className="p-4">
                                                         {activeTeamTab === 'active' ? (
                                                             <div className="flex flex-col">
-                                                                <span className="font-bold text-brand-green-dark">1 caixa(s)</span>
-                                                                <span className="text-[10px] text-gray-500">{member.lastSaleDate.toLocaleDateString()}</span>
+                                                                <span className="font-bold text-brand-green-dark dark:text-green-400">1 caixa(s)</span>
+                                                                <span className="text-[10px] text-gray-500 dark:text-gray-400">{member.lastSaleDate.toLocaleDateString()}</span>
                                                             </div>
                                                         ) : (
                                                             <div className="flex flex-col">
@@ -1997,9 +2043,9 @@ const DashboardShell: React.FC = () => {
                                             );
                                         }) : (
                                             <tr>
-                                                <td colSpan={4} className="p-12 text-center text-gray-500">
+                                                <td colSpan={4} className="p-12 text-center text-gray-500 dark:text-gray-400">
                                                     <div className="flex flex-col items-center justify-center gap-2">
-                                                        <UsersIcon className="w-12 h-12 text-gray-300" />
+                                                        <UsersIcon className="w-12 h-12 text-gray-300 dark:text-gray-600" />
                                                         <p>Nenhum consultor nesta lista.</p>
                                                     </div>
                                                 </td>
@@ -2018,11 +2064,11 @@ const DashboardShell: React.FC = () => {
                 {/* Shop Tab (Placeholder, as modal opens) */}
                 {activeTab === 'shop' && (
                     <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-                        <div className="bg-green-100 p-6 rounded-full mb-4">
+                        <div className="bg-green-100 dark:bg-green-900/20 p-6 rounded-full mb-4 text-brand-green-dark dark:text-green-400">
                              <ShoppingCartIcon />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800">Loja do Consultor</h3>
-                        <p className="text-gray-500 max-w-md mt-2">O catálogo de produtos foi aberto no formulário de pedido. Se fechou, clique abaixo para reabrir.</p>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-white">Loja do Consultor</h3>
+                        <p className="text-gray-500 dark:text-gray-400 max-w-md mt-2">O catálogo de produtos foi aberto no formulário de pedido. Se fechou, clique abaixo para reabrir.</p>
                         <button onClick={() => setIsOrderOpen(true)} className="mt-4 bg-brand-green-dark text-white px-6 py-2 rounded-lg font-bold">Abrir Pedido</button>
                     </div>
                 )}
@@ -2052,8 +2098,8 @@ const MainContent: React.FC = () => {
     }, []);
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div>
+        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-brand-dark-bg">
+            <div className="w-8 h-8 border-4 border-brand-green-dark dark:border-green-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
     );
 
@@ -2066,8 +2112,10 @@ const MainContent: React.FC = () => {
 
 export const ConsultantApp: React.FC = () => {
     return (
-        <ConsultantProvider>
-            <MainContent />
-        </ConsultantProvider>
+        <ThemeProvider>
+            <ConsultantProvider>
+                <MainContent />
+            </ConsultantProvider>
+        </ThemeProvider>
     );
 };

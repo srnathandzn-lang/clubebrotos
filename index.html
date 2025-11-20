@@ -1,27 +1,45 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="https://i.imgur.com/noaf4y6.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Brotos da Terra - Pomadas Terapêuticas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class', // Habilita o modo escuro manual
         theme: {
           extend: {
             colors: {
-              'brand-green-dark': '#2d572c',
+              'brand-green-dark': '#1a3c1e', // Mais profundo para elegância
+              'brand-green-mid': '#2d572c',
               'brand-green-light': '#e8f5e9',
               'brand-earth': '#c5a37e',
+              'brand-dark-bg': '#0f172a', // Fundo modo escuro
+              'brand-dark-card': '#1e293b', // Cards modo escuro
               'brand-text': '#374151',
             },
             fontFamily: {
               'sans': ['Montserrat', 'sans-serif'],
               'serif': ['Lora', 'serif'],
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'slide-up': 'slideUp 0.5s ease-out',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
+              }
             }
           }
         }
@@ -38,7 +56,7 @@
 }
 </script>
 </head>
-  <body>
+  <body class="bg-gray-50 dark:bg-brand-dark-bg transition-colors duration-300 text-brand-text dark:text-gray-200">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
