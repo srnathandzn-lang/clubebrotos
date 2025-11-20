@@ -23,6 +23,7 @@ const BUSINESS_RULES = {
     RETAIL_PRICE_PER_UNIT: 35.00, // Preço sugerido de venda por pomada
     FREE_SHIPPING_THRESHOLD: 4, // Em caixas
     DISTRIBUTOR_TARGET_BOXES: 50,
+    BONUS_PER_BOX: 15.00, // Exemplo de bônus por caixa da equipe
 };
 
 // --- Types Local Definition for Materials ---
@@ -1372,6 +1373,13 @@ const DashboardShell: React.FC = () => {
     const myTeam = isAdmin 
         ? consultants 
         : consultants.filter(c => c.parent_id === user?.id);
+    
+    // Regra: Consultor com equipe vira 'Distribuidor em Qualificação'
+    const hasTeam = myTeam.length > 0;
+    const displayRole = isAdmin ? 'Administrador' 
+        : user?.role === 'leader' ? 'Líder/Distribuidor' 
+        : hasTeam ? 'Distribuidor em Qualificação' 
+        : 'Consultor';
 
     // Lógica de Dashboard Administrativo
     const topRecruiters = isAdmin ? React.useMemo(() => {
@@ -1467,7 +1475,7 @@ const DashboardShell: React.FC = () => {
                         </div>
                     </div>
                     <div className="mt-3 px-3 py-1 bg-white/10 text-white/80 text-xs font-bold uppercase rounded border border-white/10 text-center shadow-sm">
-                        Nível: {isAdmin ? 'Administrador' : user?.role === 'leader' ? 'Líder/Distribuidor' : 'Consultor'}
+                        Nível: {displayRole}
                     </div>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -1492,9 +1500,13 @@ const DashboardShell: React.FC = () => {
                         </button>
                     )}
                     
-                     <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
-                        <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
-                    </button>
+                    {/* A aba de equipe só aparece para o admin ou para quem tem indicados (hasTeam) */}
+                    {(isAdmin || hasTeam) && (
+                        <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                            <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
+                        </button>
+                    )}
+                    
                     <div className="pt-4 mt-4 border-t border-white/10">
                         <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
                         <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 text-green-300 font-bold transition-colors">
@@ -1688,7 +1700,8 @@ const DashboardShell: React.FC = () => {
                                 </div>
                             </div>
                             
-                            {/* Atalho secundário para Minha Equipe */}
+                            {/* Atalho secundário para Minha Equipe (Aparece apenas se tiver indicados) */}
+                            {hasTeam && (
                              <div className="mt-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <div className="flex justify-between items-center">
                                     <div className="flex items-center gap-4">
@@ -1703,6 +1716,7 @@ const DashboardShell: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+                            )}
                         </>
                         )}
                     </div>
@@ -1716,40 +1730,122 @@ const DashboardShell: React.FC = () => {
                     />
                 )}
 
-                {/* Team Tab */}
+                {/* Team Tab - Nova Estrutura Completa */}
                 {activeTab === 'team' && (
-                    <div className="max-w-5xl mx-auto animate-fade-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                            {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
-                        </h2>
+                    <div className="max-w-5xl mx-auto animate-fade-in space-y-8">
+                        <header>
+                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                                {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
+                            </h2>
+                            <p className="text-gray-500">Gerencie seus indicados e acompanhe o desempenho.</p>
+                        </header>
+
+                        {/* Seção 1: Bonificações (Mockup Visual) */}
+                        {!isAdmin && hasTeam && (
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 opacity-10 transform translate-x-8 -translate-y-8">
+                                    <BanknotesIcon className="w-48 h-48" />
+                                </div>
+                                <div className="relative z-10">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><SparklesIcon className="w-5 h-5" /> Painel de Bonificações</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <p className="text-blue-200 text-sm mb-1">Volume da Equipe (Mês)</p>
+                                            <p className="text-3xl font-bold">0 cx</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-blue-200 text-sm mb-1">Bônus Estimado</p>
+                                            <p className="text-3xl font-bold text-yellow-300">R$ 0,00</p>
+                                            <p className="text-[10px] opacity-70">Valores calculados após fechamento.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Seção 2: Meus Indicados (Tabela com Pedidos) */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="p-6 border-b border-gray-100">
+                                <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                                    <UsersIcon className="text-brand-green-dark" /> Meus Indicados
+                                </h3>
+                            </div>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-50 text-gray-500 text-xs font-bold uppercase">
+                                <table className="w-full text-left text-sm min-w-[700px]">
+                                    <thead className="bg-gray-50 text-gray-500 font-bold uppercase">
                                         <tr>
-                                            <th className="p-4">Nome</th>
-                                            <th className="p-4">ID</th>
-                                            <th className="p-4">Status</th>
+                                            <th className="p-4">Nome / ID</th>
                                             <th className="p-4">Contato</th>
+                                            <th className="p-4">Localização</th>
+                                            <th className="p-4">Pedido (Mês)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {myTeam.length > 0 ? myTeam.map(member => (
-                                            <tr key={member.id} className="hover:bg-gray-50">
-                                                <td className="p-4">
-                                                    <div className="font-bold text-gray-800">{member.name}</div>
-                                                    <div className="text-xs text-gray-400">{member.role}</div>
-                                                </td>
-                                                <td className="p-4 font-mono text-sm text-gray-500">{member.id}</td>
-                                                <td className="p-4">
-                                                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">Ativo</span>
-                                                </td>
-                                                <td className="p-4 text-sm text-gray-600">{member.whatsapp}</td>
-                                            </tr>
-                                        )) : (
+                                        {myTeam.length > 0 ? myTeam.map((member, index) => {
+                                            // Lógica Mockada para "Pedido" (Já que não temos tabela de orders real no backend)
+                                            // Usamos o ID para gerar um estado determinístico para demonstração
+                                            const mockOrderId = parseInt(member.id.slice(-2));
+                                            const hasOrder = mockOrderId % 3 !== 0; // 2/3 têm pedidos
+                                            const orderVolume = (mockOrderId % 5) + 1; // 1 a 5 caixas
+
+                                            return (
+                                                <tr key={member.id} className="hover:bg-gray-50 transition-colors group">
+                                                    <td className="p-4">
+                                                        <div className="font-bold text-gray-800">{member.name}</div>
+                                                        <div className="text-xs text-gray-400 font-mono">ID: {member.id}</div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <a 
+                                                            href={`https://wa.me/55${member.whatsapp.replace(/\D/g, '')}`} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-lg text-xs font-bold transition-colors"
+                                                        >
+                                                            <WhatsAppIcon /> Falar
+                                                        </a>
+                                                    </td>
+                                                    <td className="p-4 text-gray-600">
+                                                        <div className="flex items-center gap-1">
+                                                            <LocationIcon />
+                                                            <span className="truncate max-w-[150px]">
+                                                                {member.address?.includes('-') 
+                                                                    ? member.address.split('-')[1].trim() 
+                                                                    : member.address || 'Não informado'}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        {hasOrder ? (
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-brand-green-dark">{orderVolume} caixa(s)</span>
+                                                                <span className="text-[10px] text-green-600">Pedido confirmado</span>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col">
+                                                                <span className="font-bold text-gray-400">Sem pedido</span>
+                                                                <a 
+                                                                    href={`https://wa.me/55${member.whatsapp.replace(/\D/g, '')}?text=Olá ${member.name.split(' ')[0]}, vi aqui no sistema que você ainda não fez seu pedido este mês. Vamos fechar suas caixas?`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-[10px] text-blue-500 hover:underline cursor-pointer"
+                                                                >
+                                                                    Incentivar Compra
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }) : (
                                             <tr>
-                                                <td colSpan={4} className="p-8 text-center text-gray-500">
-                                                    Nenhum consultor na equipe ainda.
+                                                <td colSpan={4} className="p-12 text-center text-gray-500">
+                                                    <div className="flex flex-col items-center justify-center gap-2">
+                                                        <UsersIcon className="w-12 h-12 text-gray-300" />
+                                                        <p>Você ainda não tem indicados.</p>
+                                                        <button onClick={() => setIsInviteOpen(true)} className="text-brand-green-dark font-bold hover:underline">
+                                                            Começar a indicar agora
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         )}
@@ -1787,32 +1883,35 @@ const DashboardShell: React.FC = () => {
 
 const MainContent: React.FC = () => {
     const { user, loading } = useConsultant();
-    const [view, setView] = useState<'login' | 'register'>('login');
-    const [referrerId, setReferrerId] = useState<string>('000000');
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [referrerId, setReferrerId] = useState('000000');
 
     useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const ref = urlParams.get('ref');
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
         if (ref) {
             setReferrerId(ref);
-            setView('register');
+            setIsRegistering(true);
         }
     }, []);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div></div>;
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div>
+        </div>
+    );
 
-    if (!user) {
-        if (view === 'register') {
-            return <RegisterScreen referrerId={referrerId} onBack={() => setView('login')} />;
-        }
-        return <LoginScreen onSignup={() => setView('register')} />;
-    }
+    if (user) return <DashboardShell />;
 
-    return <DashboardShell />;
+    if (isRegistering) return <RegisterScreen referrerId={referrerId} onBack={() => setIsRegistering(false)} />;
+
+    return <LoginScreen onSignup={() => setIsRegistering(true)} />;
 };
 
-export const ConsultantApp: React.FC = () => (
-    <ConsultantProvider>
-        <MainContent />
-    </ConsultantProvider>
-);
+export const ConsultantApp: React.FC = () => {
+    return (
+        <ConsultantProvider>
+            <MainContent />
+        </ConsultantProvider>
+    );
+};
