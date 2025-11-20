@@ -10,7 +10,9 @@ import {
   BanknotesIcon, PresentationChartLineIcon, CalendarIcon, MenuIcon,
   QrCodeIcon, DocumentDuplicateIcon, CheckCircleIcon, CreditCardIcon,
   PhotoIcon, DownloadIcon, ClipboardCopyIcon, TrashIcon,
-  HandshakeIcon, TargetIcon, BellIcon, BriefcaseIcon, SunIcon, MoonIcon
+  HandshakeIcon, TargetIcon, BellIcon, BriefcaseIcon, SunIcon, MoonIcon,
+  UserPlusIcon, CurrencyDollarIcon, ClipboardListIcon, TagIcon, CalculatorIcon,
+  AcademicCapIcon, PlayCircleIcon, VideoCameraIcon
 } from './components/Icons';
 
 // --- InfinitePay Config ---
@@ -21,6 +23,7 @@ const BUSINESS_RULES = {
     BOX_PRICE: 210.00,
     UNITS_PER_BOX: 12,
     RETAIL_PRICE_PER_UNIT: 35.00, // Preço sugerido de venda por pomada
+    UNIT_COST: 210.00 / 12, // R$ 17.50
     FREE_SHIPPING_THRESHOLD: 4, // Em caixas
     DISTRIBUTOR_TARGET_BOXES: 50,
     BONUS_PER_BOX: 15.00, // Exemplo de bônus por caixa da equipe
@@ -36,6 +39,32 @@ interface MarketingMaterial {
     content?: string;
     image_url?: string;
     created_at?: string;
+}
+
+interface UniversityContent {
+    id: number;
+    title: string;
+    description?: string;
+    video_url: string;
+    category: string;
+    created_at?: string;
+}
+
+interface Customer {
+    id: number;
+    name: string;
+    phone?: string;
+    notes?: string;
+}
+
+interface PrivateSale {
+    id: number;
+    customer_id?: number;
+    product_name: string;
+    quantity: number;
+    sale_price: number;
+    sale_date: string;
+    customer?: Customer; // Join
 }
 
 // --- Theme Context ---
@@ -96,7 +125,7 @@ const EarningsSimulator: React.FC = () => {
     ];
 
     return (
-        <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col transition-all hover:shadow-xl animate-fade-in">
+        <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col transition-all hover:shadow-xl animate-fade-in h-full">
             {/* Cabeçalho Motivacional */}
             <div className="bg-gradient-to-br from-brand-green-dark to-green-900 p-6 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
@@ -197,14 +226,14 @@ const EarningsSimulator: React.FC = () => {
     );
 };
 
-// --- Componente: Modelo de Negócio (NOVO - Redesenhado) ---
-const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrder: () => void }> = ({ onRequestInvite, onRequestOrder }) => {
+// --- Componente: Seção de Modelo de Negócio (Conteúdo Educativo) ---
+const BusinessModelSection: React.FC<{ onRequestInvite: () => void; onRequestOrder: () => void }> = ({ onRequestInvite, onRequestOrder }) => {
     const [activeTab, setActiveTab] = useState<'sales' | 'team'>('sales');
 
     return (
-        <div className="max-w-5xl mx-auto animate-fade-in">
+        <div className="animate-fade-in">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-brand-green-dark to-green-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-2xl mb-8">
+            <div className="bg-gradient-to-r from-brand-green-dark to-green-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-xl mb-8">
                 <div className="absolute top-0 right-0 opacity-10 transform translate-x-8 -translate-y-8">
                     <HandshakeIcon className="h-64 w-64" />
                 </div>
@@ -222,7 +251,7 @@ const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrde
                     <div className="inline-flex bg-green-900/30 backdrop-blur-sm p-1 rounded-full border border-white/10">
                         <button 
                             onClick={() => setActiveTab('sales')}
-                            className={`px-6 py-3 rounded-full text-sm md:text-base font-bold transition-all duration-300 flex items-center gap-2 ${
+                            className={`px-4 md:px-6 py-2 md:py-3 rounded-full text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
                                 activeTab === 'sales' 
                                 ? 'bg-white text-brand-green-dark shadow-lg transform scale-105' 
                                 : 'text-green-100 hover:bg-white/10'
@@ -232,7 +261,7 @@ const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrde
                         </button>
                         <button 
                             onClick={() => setActiveTab('team')}
-                            className={`px-6 py-3 rounded-full text-sm md:text-base font-bold transition-all duration-300 flex items-center gap-2 ${
+                            className={`px-4 md:px-6 py-2 md:py-3 rounded-full text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
                                 activeTab === 'team' 
                                 ? 'bg-white text-brand-green-dark shadow-lg transform scale-105' 
                                 : 'text-green-100 hover:bg-white/10'
@@ -359,6 +388,512 @@ const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrde
                     </div>
                 </div>
             </div>
+        </div>
+    );
+};
+
+// --- NOVO: Tela de Gestão do Negócio (CRM Completo) ---
+const MyBusinessManagementScreen: React.FC<{ onRequestOrder: () => void }> = ({ onRequestOrder }) => {
+    const { user } = useConsultant();
+    const [activeTab, setActiveTab] = useState<'overview' | 'sales' | 'customers' | 'stock'>('overview');
+    
+    // Data States
+    const [purchases, setPurchases] = useState<Sale[]>([]); // Entradas (Compras na Brotos)
+    const [privateSales, setPrivateSales] = useState<PrivateSale[]>([]); // Saídas (Vendas para Clientes)
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Modal States
+    const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+    const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+
+    // Form States
+    const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', notes: '' });
+    const [newSale, setNewSale] = useState({ customer_id: '', product_name: 'Pomada Copaíba', quantity: 1, sale_price: 35.00 });
+
+    useEffect(() => {
+        if(user) fetchData();
+    }, [user]);
+
+    const fetchData = async () => {
+        setLoading(true);
+        // 1. Buscar Compras (Entradas)
+        const { data: purchaseData } = await supabase.from('sales').select('*').eq('consultant_id', user?.id);
+        if(purchaseData) setPurchases(purchaseData);
+
+        // 2. Buscar Vendas Pessoais (Saídas)
+        const { data: salesData } = await supabase.from('private_sales').select('*, customer:customers(*)').eq('consultant_id', user?.id);
+        if(salesData) setPrivateSales(salesData as any); // Casting temporário se tabela não existir no types
+
+        // 3. Buscar Clientes
+        const { data: customerData } = await supabase.from('private_customers').select('*').eq('consultant_id', user?.id);
+        if(customerData) setCustomers(customerData);
+
+        setLoading(false);
+    };
+
+    // Cálculos
+    const totalBoxesBought = purchases.reduce((acc, p) => acc + p.quantity, 0);
+    const totalUnitsBought = totalBoxesBought * 12;
+    const totalUnitsSold = privateSales.reduce((acc, s) => acc + s.quantity, 0);
+    const currentStock = totalUnitsBought - totalUnitsSold;
+    
+    const totalRevenue = privateSales.reduce((acc, s) => acc + (s.sale_price * s.quantity), 0);
+    const totalCostEstimate = totalUnitsSold * BUSINESS_RULES.UNIT_COST;
+    const totalProfit = totalRevenue - totalCostEstimate;
+
+    // Handlers
+    const handleAddCustomer = async () => {
+        if(!newCustomer.name) return alert("Nome é obrigatório");
+        const { error } = await supabase.from('private_customers').insert([{
+            consultant_id: user?.id,
+            name: newCustomer.name,
+            phone: newCustomer.phone,
+            notes: newCustomer.notes
+        }]);
+        if(error) alert("Erro ao adicionar cliente: " + error.message);
+        else {
+            setIsCustomerModalOpen(false);
+            setNewCustomer({ name: '', phone: '', notes: '' });
+            fetchData();
+        }
+    };
+
+    const handleAddSale = async () => {
+        if(newSale.quantity > currentStock) return alert("Estoque insuficiente!");
+        const { error } = await supabase.from('private_sales').insert([{
+            consultant_id: user?.id,
+            customer_id: newSale.customer_id ? parseInt(newSale.customer_id) : null,
+            product_name: newSale.product_name,
+            quantity: newSale.quantity,
+            sale_price: newSale.sale_price
+        }]);
+        if(error) alert("Erro ao registrar venda: " + error.message);
+        else {
+            setIsSaleModalOpen(false);
+            fetchData();
+        }
+    };
+
+    return (
+        <div className="max-w-6xl mx-auto animate-fade-in space-y-6 pb-24 md:pb-0">
+             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-1 font-serif">Meu Negócio</h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Gestão completa de estoque, vendas e clientes.</p>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto">
+                    <button onClick={() => setIsSaleModalOpen(true)} className="flex-1 md:flex-none bg-brand-green-dark text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:bg-opacity-90 flex items-center justify-center gap-2 text-sm">
+                        <CurrencyDollarIcon className="w-5 h-5" /> Nova Venda
+                    </button>
+                    <button onClick={() => setIsCustomerModalOpen(true)} className="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:bg-opacity-90 flex items-center justify-center gap-2 text-sm">
+                        <UserPlusIcon className="w-5 h-5" /> Novo Cliente
+                    </button>
+                </div>
+            </header>
+
+            {/* Navigation Tabs */}
+            <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar">
+                <button onClick={() => setActiveTab('overview')} className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'overview' ? 'bg-gray-800 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700'}`}>Visão Geral</button>
+                <button onClick={() => setActiveTab('sales')} className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'sales' ? 'bg-gray-800 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700'}`}>Minhas Vendas</button>
+                <button onClick={() => setActiveTab('customers')} className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'customers' ? 'bg-gray-800 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700'}`}>Meus Clientes</button>
+                <button onClick={() => setActiveTab('stock')} className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'stock' ? 'bg-gray-800 text-white dark:bg-white dark:text-gray-900' : 'bg-white dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700'}`}>Histórico de Compras</button>
+            </div>
+
+            {activeTab === 'overview' && (
+                <div className="space-y-6 animate-fade-in">
+                    {/* KPIs */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-white dark:bg-brand-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-2 mb-2 text-gray-500 dark:text-gray-400 text-xs font-bold uppercase"><PackageIcon className="w-4 h-4" /> Estoque Atual</div>
+                            <p className={`text-2xl md:text-3xl font-bold ${currentStock < 10 ? 'text-red-500' : 'text-gray-800 dark:text-white'}`}>{currentStock}</p>
+                            <p className="text-[10px] text-gray-400">unidades disponíveis</p>
+                        </div>
+                        <div className="bg-white dark:bg-brand-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-2 mb-2 text-gray-500 dark:text-gray-400 text-xs font-bold uppercase"><ShoppingCartIcon className="w-4 h-4" /> Vendas Totais</div>
+                            <p className="text-2xl md:text-3xl font-bold text-brand-green-dark dark:text-green-400">{totalUnitsSold}</p>
+                            <p className="text-[10px] text-gray-400">unidades vendidas</p>
+                        </div>
+                        <div className="bg-white dark:bg-brand-dark-card p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-2 mb-2 text-gray-500 dark:text-gray-400 text-xs font-bold uppercase"><CurrencyDollarIcon className="w-4 h-4" /> Receita Bruta</div>
+                            <p className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">R$ {totalRevenue.toLocaleString('pt-BR', {minimumFractionDigits: 0})}</p>
+                            <p className="text-[10px] text-gray-400">total arrecadado</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-green-500 to-brand-green-dark p-4 rounded-2xl shadow-lg text-white">
+                            <div className="flex items-center gap-2 mb-2 text-green-100 text-xs font-bold uppercase"><TrendingUpIcon className="w-4 h-4" /> Lucro Líquido</div>
+                            <p className="text-2xl md:text-3xl font-bold">R$ {totalProfit.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                            <p className="text-[10px] text-green-100 opacity-80">Receita - Custo Produto</p>
+                        </div>
+                    </div>
+
+                    {/* Atalhos Rápidos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <button onClick={() => setIsSaleModalOpen(true)} className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-200 dark:hover:border-green-800 transition-all group text-left">
+                             <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                 <CurrencyDollarIcon />
+                             </div>
+                             <h3 className="font-bold text-gray-800 dark:text-white">Registrar Nova Venda</h3>
+                             <p className="text-sm text-gray-500 dark:text-gray-400">Baixe seu estoque e contabilize seu lucro imediatamente.</p>
+                         </button>
+                         <button onClick={onRequestOrder} className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:border-yellow-200 dark:hover:border-yellow-800 transition-all group text-left">
+                             <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                 <ShoppingCartIcon />
+                             </div>
+                             <h3 className="font-bold text-gray-800 dark:text-white">Repor Estoque (Comprar)</h3>
+                             <p className="text-sm text-gray-500 dark:text-gray-400">Adquira mais caixas com a Brotos para continuar vendendo.</p>
+                         </button>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'sales' && (
+                <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden animate-fade-in">
+                     <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2"><ClipboardListIcon /> Histórico de Vendas</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold uppercase">
+                                <tr>
+                                    <th className="p-4">Data</th>
+                                    <th className="p-4">Cliente</th>
+                                    <th className="p-4">Produto</th>
+                                    <th className="p-4 text-center">Qtd</th>
+                                    <th className="p-4 text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {privateSales.length > 0 ? privateSales.map(sale => (
+                                    <tr key={sale.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <td className="p-4 text-gray-500">{new Date(sale.sale_date).toLocaleDateString()}</td>
+                                        <td className="p-4 font-medium text-gray-800 dark:text-white">{(sale as any).customer?.name || 'Cliente Avulso'}</td>
+                                        <td className="p-4 text-gray-500">{sale.product_name}</td>
+                                        <td className="p-4 text-center font-bold">{sale.quantity}</td>
+                                        <td className="p-4 text-right text-green-600 font-bold">R$ {sale.sale_price.toFixed(2)}</td>
+                                    </tr>
+                                )) : (
+                                    <tr><td colSpan={5} className="p-8 text-center text-gray-400">Nenhuma venda registrada.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'customers' && (
+                <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden animate-fade-in">
+                     <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                        <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2"><UsersIcon /> Carteira de Clientes</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold uppercase">
+                                <tr>
+                                    <th className="p-4">Nome</th>
+                                    <th className="p-4">Telefone</th>
+                                    <th className="p-4">Observações</th>
+                                    <th className="p-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {customers.length > 0 ? customers.map(customer => (
+                                    <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <td className="p-4 font-bold text-gray-800 dark:text-white">{customer.name}</td>
+                                        <td className="p-4 text-gray-500">{customer.phone || '-'}</td>
+                                        <td className="p-4 text-gray-500 truncate max-w-xs">{customer.notes || '-'}</td>
+                                        <td className="p-4">
+                                            {customer.phone && (
+                                                <a href={`https://wa.me/55${customer.phone.replace(/\D/g,'')}`} target="_blank" className="text-green-600 hover:underline text-xs font-bold flex items-center gap-1">
+                                                    <WhatsAppIcon /> Contatar
+                                                </a>
+                                            )}
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr><td colSpan={4} className="p-8 text-center text-gray-400">Nenhum cliente cadastrado.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'stock' && (
+                <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden animate-fade-in">
+                    <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                        <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                            <TruckIcon /> Histórico de Compras na Brotos
+                        </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold uppercase">
+                                <tr>
+                                    <th className="p-4">Data</th>
+                                    <th className="p-4 text-center">Qtd. Caixas</th>
+                                    <th className="p-4 text-right">Valor Total</th>
+                                    <th className="p-4 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {purchases.length > 0 ? purchases.map((order) => (
+                                    <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <td className="p-4 text-gray-600 dark:text-gray-300">{new Date(order.created_at).toLocaleDateString()}</td>
+                                        <td className="p-4 text-center font-bold text-gray-800 dark:text-white">{order.quantity}</td>
+                                        <td className="p-4 text-right font-bold text-brand-green-dark dark:text-green-400">
+                                            R$ {order.total_amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="p-4 text-center">
+                                            <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full text-xs font-bold">
+                                                Concluído
+                                            </span>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr><td colSpan={4} className="p-8 text-center text-gray-400">Nenhuma compra realizada.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Nova Venda */}
+            {isSaleModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Registrar Venda</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Cliente</label>
+                                <select 
+                                    className="w-full p-2 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                    value={newSale.customer_id}
+                                    onChange={e => setNewSale({...newSale, customer_id: e.target.value})}
+                                >
+                                    <option value="">Venda Avulsa (Sem cadastro)</option>
+                                    {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Qtd (Unidades)</label>
+                                    <input type="number" min="1" className="w-full p-2 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                        value={newSale.quantity} onChange={e => setNewSale({...newSale, quantity: parseInt(e.target.value)})} />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Valor Total (R$)</label>
+                                    <input type="number" step="0.50" className="w-full p-2 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                        value={newSale.sale_price} onChange={e => setNewSale({...newSale, sale_price: parseFloat(e.target.value)})} />
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-400">Lucro estimado nesta venda: R$ {((newSale.sale_price - (newSale.quantity * BUSINESS_RULES.UNIT_COST))).toFixed(2)}</p>
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setIsSaleModalOpen(false)} className="flex-1 py-3 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg font-bold">Cancelar</button>
+                            <button onClick={handleAddSale} className="flex-1 py-3 bg-brand-green-dark text-white rounded-lg font-bold hover:bg-opacity-90">Confirmar Venda</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Novo Cliente */}
+            {isCustomerModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Novo Cliente</h3>
+                        <div className="space-y-4">
+                            <input type="text" placeholder="Nome do Cliente" className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} />
+                            <input type="text" placeholder="WhatsApp (Opcional)" className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} />
+                            <textarea placeholder="Observações (Endereço, Preferências...)" className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white h-24"
+                                value={newCustomer.notes} onChange={e => setNewCustomer({...newCustomer, notes: e.target.value})} />
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setIsCustomerModalOpen(false)} className="flex-1 py-3 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg font-bold">Cancelar</button>
+                            <button onClick={handleAddCustomer} className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-opacity-90">Salvar Cliente</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- NOVO: UniBrotos (Universidade Corporativa) ---
+const UniBrotosScreen: React.FC = () => {
+    const { user } = useConsultant();
+    const isAdmin = user?.role === 'admin';
+    const [videos, setVideos] = useState<UniversityContent[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeCategory, setActiveCategory] = useState('all');
+    
+    // Admin Add Video
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newVideo, setNewVideo] = useState<Partial<UniversityContent>>({ category: 'sales' });
+
+    const fetchVideos = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('university_content')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!error && data) setVideos(data);
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchVideos();
+    }, []);
+
+    const getYouTubeId = (url: string) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
+    const handleAddVideo = async () => {
+        if (!newVideo.title || !newVideo.video_url) return alert("Título e Link são obrigatórios");
+        
+        const { error } = await supabase.from('university_content').insert([newVideo]);
+        if (error) alert("Erro: " + error.message);
+        else {
+            setIsAddModalOpen(false);
+            setNewVideo({ category: 'sales' });
+            fetchVideos();
+        }
+    };
+    
+    const handleDeleteVideo = async (id: number) => {
+        if(!confirm("Deletar esta aula?")) return;
+        await supabase.from('university_content').delete().eq('id', id);
+        fetchVideos();
+    };
+
+    const categories = [
+        { id: 'all', label: 'Todas as Aulas' },
+        { id: 'sales', label: '💰 Técnicas de Venda' },
+        { id: 'products', label: '📦 Produtos' },
+        { id: 'marketing', label: '📱 Marketing Digital' },
+        { id: 'leadership', label: '🚀 Liderança' },
+    ];
+
+    const filteredVideos = activeCategory === 'all' ? videos : videos.filter(v => v.category === activeCategory);
+
+    return (
+        <div className="max-w-6xl mx-auto animate-fade-in pb-24">
+            <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="bg-brand-green-dark p-2 rounded-lg text-white shadow-lg"><AcademicCapIcon className="w-8 h-8" /></div>
+                        <h2 className="text-3xl font-bold text-gray-800 dark:text-white font-serif">UniBrotos</h2>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-2xl">
+                        Sua universidade corporativa. Aprenda tudo sobre nossos produtos, técnicas de venda e como liderar sua equipe para o sucesso.
+                    </p>
+                </div>
+                {isAdmin && (
+                    <button onClick={() => setIsAddModalOpen(true)} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-opacity-90 flex items-center gap-2">
+                        <VideoCameraIcon /> Adicionar Aula
+                    </button>
+                )}
+            </header>
+
+            {/* Categorias */}
+            <div className="flex overflow-x-auto gap-3 mb-8 pb-2 no-scrollbar">
+                {categories.map(cat => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                            activeCategory === cat.id 
+                                ? 'bg-brand-green-dark text-white shadow-md scale-105' 
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        {cat.label}
+                    </button>
+                ))}
+            </div>
+
+            {loading ? (
+                <div className="flex justify-center py-12"><div className="w-10 h-10 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div></div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredVideos.length > 0 ? filteredVideos.map(video => {
+                        const videoId = getYouTubeId(video.video_url);
+                        return (
+                            <div key={video.id} className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800 group hover:shadow-2xl transition-all duration-300 flex flex-col">
+                                <div className="relative aspect-video bg-black">
+                                    {videoId ? (
+                                        <iframe 
+                                            width="100%" 
+                                            height="100%" 
+                                            src={`https://www.youtube.com/embed/${videoId}`} 
+                                            title={video.title}
+                                            frameBorder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowFullScreen
+                                        ></iframe>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-white/50"><PlayCircleIcon /> Link Inválido</div>
+                                    )}
+                                    {isAdmin && (
+                                        <button onClick={() => handleDeleteVideo(video.id)} className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full shadow-md hover:bg-red-700 z-10">
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="p-5 flex-1 flex flex-col">
+                                    <div className="mb-2 flex items-center gap-2">
+                                        <span className="text-[10px] font-bold uppercase bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
+                                            {categories.find(c => c.id === video.category)?.label || video.category}
+                                        </span>
+                                    </div>
+                                    <h3 className="font-bold text-lg text-gray-800 dark:text-white mb-2 leading-tight group-hover:text-brand-green-dark transition-colors">{video.title}</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 flex-1">{video.description}</p>
+                                </div>
+                            </div>
+                        )
+                    }) : (
+                        <div className="col-span-3 py-12 text-center text-gray-400">
+                            <AcademicCapIcon className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                            <p>Nenhuma aula encontrada nesta categoria.</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+             {/* Modal Add Video */}
+             {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-fade-in">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Adicionar Aula</h3>
+                        <div className="space-y-4">
+                            <input type="text" placeholder="Título da Aula" className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                value={newVideo.title || ''} onChange={e => setNewVideo({...newVideo, title: e.target.value})} />
+                            
+                            <input type="text" placeholder="Link do YouTube" className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                value={newVideo.video_url || ''} onChange={e => setNewVideo({...newVideo, video_url: e.target.value})} />
+                            
+                            <select className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white"
+                                value={newVideo.category} onChange={e => setNewVideo({...newVideo, category: e.target.value})}>
+                                {categories.filter(c => c.id !== 'all').map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                            </select>
+
+                            <textarea placeholder="Descrição (Opcional)" className="w-full p-3 border dark:border-gray-700 rounded-lg dark:bg-black/20 dark:text-white h-24"
+                                value={newVideo.description || ''} onChange={e => setNewVideo({...newVideo, description: e.target.value})} />
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 rounded-lg font-bold">Cancelar</button>
+                            <button onClick={handleAddVideo} className="flex-1 py-3 bg-brand-green-dark text-white rounded-lg font-bold hover:bg-opacity-90">Salvar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -533,6 +1068,207 @@ const useConsultant = () => {
 };
 
 // --- 4. Componentes de Interface ---
+
+const SocialMediaMaterialsScreen: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<'images' | 'scripts'>('images');
+    
+    const materials = [
+        { id: 1, type: 'image', title: 'Post Benefícios', url: 'https://i.imgur.com/ntlcx07.png' }, // Placeholder
+        { id: 2, type: 'image', title: 'Antes e Depois', url: 'https://i.imgur.com/ntlcx07.png' }, // Placeholder
+        { id: 3, type: 'script', title: 'Abordagem WhatsApp', content: 'Olá! Tudo bem? Gostaria de apresentar...' },
+        { id: 4, type: 'script', title: 'Recuperação de Cliente', content: 'Oi sumida! Chegou reposição...' },
+    ];
+
+    return (
+        <div className="max-w-6xl mx-auto animate-fade-in pb-24">
+             <header className="mb-8">
+                <h2 className="text-3xl font-bold text-gray-800 dark:text-white font-serif mb-2">Materiais de Divulgação</h2>
+                <p className="text-gray-500 dark:text-gray-400">Baixe imagens e copie scripts para vender mais.</p>
+            </header>
+
+            <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+                <button 
+                    onClick={() => setActiveTab('images')}
+                    className={`pb-3 px-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'images' ? 'border-brand-green-dark text-brand-green-dark dark:border-green-400 dark:text-green-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
+                >
+                    Imagens & Posts
+                </button>
+                <button 
+                    onClick={() => setActiveTab('scripts')}
+                    className={`pb-3 px-2 text-sm font-bold border-b-2 transition-colors ${activeTab === 'scripts' ? 'border-brand-green-dark text-brand-green-dark dark:border-green-400 dark:text-green-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
+                >
+                    Scripts de Venda
+                </button>
+            </div>
+
+            {activeTab === 'images' ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {materials.filter(m => m.type === 'image').map((item) => (
+                        <div key={item.id} className="group relative bg-white dark:bg-brand-dark-card rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
+                            <div className="aspect-square bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                                <img src={item.url} alt={item.title} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                            <div className="p-3">
+                                <p className="font-bold text-sm text-gray-800 dark:text-white mb-2 truncate">{item.title}</p>
+                                <button className="w-full py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded flex items-center justify-center gap-2 transition-colors">
+                                    <DownloadIcon className="w-4 h-4" /> Baixar
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {materials.filter(m => m.type === 'script').map((item) => (
+                        <div key={item.id} className="bg-white dark:bg-brand-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="font-bold text-gray-800 dark:text-white">{item.title}</h3>
+                                <button 
+                                    onClick={() => {navigator.clipboard.writeText(item.content || ''); alert('Copiado!');}}
+                                    className="text-brand-green-dark dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 p-2 rounded-lg transition-colors"
+                                    title="Copiar"
+                                >
+                                    <ClipboardCopyIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-lg text-sm text-gray-600 dark:text-gray-300 font-mono leading-relaxed whitespace-pre-wrap border border-gray-100 dark:border-gray-700">
+                                {item.content}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+    const { user } = useConsultant();
+    const [quantity, setQuantity] = useState(1);
+    const [step, setStep] = useState(1); // 1: Select, 2: Payment, 3: Success
+
+    if (!isOpen) return null;
+
+    const boxPrice = BUSINESS_RULES.BOX_PRICE;
+    const total = quantity * boxPrice;
+    const shipping = quantity >= BUSINESS_RULES.FREE_SHIPPING_THRESHOLD ? 0 : 45.00;
+    const grandTotal = total + shipping;
+
+    const handlePayment = () => {
+        // Mock payment process
+        setStep(3);
+        // Here you would integrate with InfinitePay API or similar
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in">
+                {/* Header */}
+                <div className="bg-brand-green-dark p-6 text-white flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-bold font-serif">Novo Pedido</h2>
+                        <p className="text-xs opacity-80">Reabasteça seu estoque com margem máxima.</p>
+                    </div>
+                    <button onClick={onClose} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors">
+                        <CloseIcon className="w-6 h-6" />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 overflow-y-auto flex-1">
+                    {step === 1 && (
+                        <div className="space-y-8">
+                            {/* Product Selection */}
+                            <div className="flex items-start gap-4">
+                                <div className="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
+                                    <PackageIcon className="w-12 h-12 text-gray-400" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-lg text-gray-800 dark:text-white">Caixa Pomada Copaíba (12 un)</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Caixa fechada para revenda.</p>
+                                    <div className="flex items-center gap-2 text-brand-green-dark dark:text-green-400 font-bold">
+                                        <span className="text-xl">R$ {boxPrice.toFixed(2)}</span>
+                                        <span className="text-xs bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full text-green-700 dark:text-green-300">R$ {(boxPrice/12).toFixed(2)} /un</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Quantity Control */}
+                            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                                <span className="font-bold text-gray-700 dark:text-gray-300">Quantidade de Caixas:</span>
+                                <div className="flex items-center gap-4">
+                                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-bold">-</button>
+                                    <span className="w-8 text-center font-bold text-xl">{quantity}</span>
+                                    <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 rounded-full bg-brand-green-dark text-white flex items-center justify-center hover:bg-opacity-90 transition-colors font-bold">+</button>
+                                </div>
+                            </div>
+
+                             {/* Summary */}
+                             <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4">
+                                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                                    <span>Subtotal</span>
+                                    <span>R$ {total.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                                    <span>Frete {quantity >= BUSINESS_RULES.FREE_SHIPPING_THRESHOLD && <span className="text-green-500 font-bold">(Grátis!)</span>}</span>
+                                    <span>{shipping === 0 ? 'R$ 0,00' : `R$ ${shipping.toFixed(2)}`}</span>
+                                </div>
+                                <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white pt-2">
+                                    <span>Total</span>
+                                    <span>R$ {grandTotal.toFixed(2)}</span>
+                                </div>
+                             </div>
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <div className="text-center py-8">
+                            <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Pagamento via Pix</h3>
+                            <div className="bg-gray-100 dark:bg-black/30 p-4 rounded-xl mb-6 inline-block">
+                                <QrCodeIcon className="w-48 h-48 mx-auto text-gray-800 dark:text-white" />
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Escaneie o QR Code ou copie o código abaixo para pagar.</p>
+                            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg flex items-center gap-2 mb-6 border border-gray-200 dark:border-gray-700">
+                                <code className="text-xs text-gray-600 dark:text-gray-300 flex-1 break-all">00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Sao Paulo62070503***63041234</code>
+                                <button className="text-brand-green-dark dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 p-2 rounded transition-colors"><ClipboardCopyIcon /></button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 3 && (
+                        <div className="text-center py-12">
+                             <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                                <CheckCircleIcon className="w-12 h-12" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Pedido Realizado!</h3>
+                            <p className="text-gray-500 dark:text-gray-400 mb-8">Seu pagamento está sendo processado. Você receberá a confirmação no WhatsApp.</p>
+                            <button onClick={onClose} className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                Voltar ao Início
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer Actions */}
+                {step !== 3 && (
+                    <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 flex gap-4">
+                        {step === 2 && (
+                            <button onClick={() => setStep(1)} className="flex-1 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl font-bold transition-colors">
+                                Voltar
+                            </button>
+                        )}
+                        <button 
+                            onClick={() => step === 1 ? setStep(2) : handlePayment()} 
+                            className="flex-1 bg-brand-green-dark text-white py-3 rounded-xl font-bold shadow-lg hover:bg-opacity-90 transition-all"
+                        >
+                            {step === 1 ? 'Ir para Pagamento' : 'Já fiz o Pagamento'}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const RegisterScreen: React.FC<{ referrerId: string; onBack?: () => void }> = ({ referrerId, onBack }) => {
     const [formData, setFormData] = useState({
@@ -813,15 +1549,12 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
 
                 <button 
                     onClick={onSignup}
-                    className="w-full bg-white dark:bg-transparent text-brand-green-dark dark:text-green-400 border-2 border-brand-green-dark dark:border-green-500 font-bold py-3 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 transition-all"
+                    className="w-full bg-white dark:bg-transparent text-brand-green-dark dark:text-green-400 border-2 border-brand-green-dark dark:border-green-500 font-bold py-4 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all mb-4"
                 >
                     Quero ser um Consultor
                 </button>
                 
-                <button 
-                    onClick={handleSetupAdmin}
-                    className="mt-8 text-xs text-gray-400 hover:text-brand-green-dark dark:hover:text-green-400 underline transition-colors"
-                >
+                <button onClick={handleSetupAdmin} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline">
                     Configurar Admin (Primeiro Acesso)
                 </button>
             </div>
@@ -829,1313 +1562,206 @@ const LoginScreen: React.FC<{ onSignup: () => void }> = ({ onSignup }) => {
     );
 };
 
-const InviteModal: React.FC<{ isOpen: boolean; onClose: () => void; myId: string }> = ({ isOpen, onClose, myId }) => {
-    if (!isOpen) return null;
-    const inviteLink = `${window.location.origin}?ref=${myId}`;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-2xl w-full max-w-md p-6 text-center animate-fade-in border border-gray-100 dark:border-gray-700">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-brand-green-dark dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                    <PlusIcon />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-white">Expandir Equipe</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">Envie este link para um novo consultor. O sistema identificará você como líder e gerará o ID dele automaticamente.</p>
-                
-                <div className="bg-gray-50 dark:bg-black/20 p-4 rounded-xl break-all font-mono text-sm mb-6 border border-dashed border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300">
-                    {inviteLink}
-                </div>
-                
-                <div className="flex gap-3">
-                    <button onClick={onClose} className="flex-1 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors">Fechar</button>
-                    <button onClick={() => {navigator.clipboard.writeText(inviteLink); alert('Link copiado!');}} className="flex-1 py-3 bg-brand-green-dark text-white rounded-xl font-bold hover:bg-opacity-90 transition-colors shadow-md">Copiar Link</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// --- NOVO: Tela de Materiais para Redes Sociais ---
-const SocialMediaMaterialsScreen: React.FC = () => {
-    const { user } = useConsultant();
-    const isAdmin = user?.role === 'admin';
-    const [activeCategory, setActiveCategory] = useState('all');
-    const [materials, setMaterials] = useState<MarketingMaterial[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    
-    // Admin States
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newMaterial, setNewMaterial] = useState<Partial<MarketingMaterial>>({ type: 'image', category: 'products' });
-
-    const fetchMaterials = async () => {
-        setIsLoading(true);
-        const { data, error } = await supabase
-            .from('marketing_materials')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (!error && data) {
-            setMaterials(data);
-        }
-        setIsLoading(false);
-    };
-
-    useEffect(() => {
-        fetchMaterials();
-    }, []);
-
-    // Helper function to format Imgur links to direct links
-    const formatImgurUrl = (url: string | undefined) => {
-        if (!url) return '';
-        
-        let cleanUrl = url.split('?')[0].trim();
-        
-        // Se já é um link direto (tem extensão), retorna
-        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(cleanUrl)) {
-            return cleanUrl;
-        }
-
-        // Se for um link do Imgur sem extensão
-        if (cleanUrl.includes('imgur.com')) {
-            // Remove 'https://' e 'www' para facilitar o parse
-            const parts = cleanUrl.split('/');
-            const id = parts[parts.length - 1];
-            // Retorna formato direto (i.imgur.com/ID.png)
-            return `https://i.imgur.com/${id}.png`;
-        }
-
-        return url;
-    };
-
-    const handleAddMaterial = async () => {
-        if (!newMaterial.title || !newMaterial.category) {
-            alert("Preencha os campos obrigatórios.");
-            return;
-        }
-
-        // Apply formatting to URL before saving
-        const formattedMaterial = { ...newMaterial };
-        if (formattedMaterial.type === 'image' && formattedMaterial.image_url) {
-            formattedMaterial.image_url = formatImgurUrl(formattedMaterial.image_url);
-        }
-
-        const { error } = await supabase.from('marketing_materials').insert([formattedMaterial]);
-        
-        if (error) {
-            alert("Erro ao adicionar: " + error.message);
-        } else {
-            setIsAddModalOpen(false);
-            setNewMaterial({ type: 'image', category: 'products' }); // Reset
-            fetchMaterials();
-        }
-    };
-
-    const handleDeleteMaterial = async (id: number) => {
-        if(!window.confirm("Tem certeza que deseja excluir este material?")) return;
-
-        const { error } = await supabase.from('marketing_materials').delete().eq('id', id);
-        if (error) {
-            alert("Erro ao deletar: " + error.message);
-        } else {
-            fetchMaterials();
-        }
-    };
-
-    const categories = [
-        { id: 'all', label: 'Todos' },
-        { id: 'products', label: '📦 Produtos' },
-        { id: 'company', label: '💼 Empresa' },
-        { id: 'texts', label: '💬 Textos Prontos' },
-        { id: 'promo', label: '📣 Promoções' },
-    ];
-
-    const filteredMaterials = activeCategory === 'all' 
-        ? materials 
-        : materials.filter(m => m.category === activeCategory);
-
-    const handleCopy = (text: string) => {
-        navigator.clipboard.writeText(text);
-        alert("Texto copiado para a área de transferência!");
-    };
-
-    const handleDownload = (url: string) => {
-        // Ensure we are downloading the formatted URL
-        const directUrl = formatImgurUrl(url);
-        window.open(directUrl, '_blank');
-    };
-
-    return (
-        <div className="max-w-6xl mx-auto animate-fade-in">
-            {/* Header da Seção */}
-            <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="text-center md:text-left">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2 font-serif">Acervo de Posts para Divulgação</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base max-w-3xl">
-                        Use estes materiais para divulgar os produtos e a empresa nas suas redes sociais: Instagram, Facebook, WhatsApp e muito mais.
-                    </p>
-                </div>
-                {isAdmin && (
-                    <button 
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="bg-brand-green-dark text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-opacity-90 transition flex items-center gap-2"
-                    >
-                        <PlusIcon /> Adicionar Material
-                    </button>
-                )}
-            </header>
-
-            {/* Filtro de Categorias */}
-            <div className="flex overflow-x-auto gap-2 mb-8 pb-2 no-scrollbar">
-                {categories.map(cat => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setActiveCategory(cat.id)}
-                        className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
-                            activeCategory === cat.id 
-                                ? 'bg-brand-green-dark text-white shadow-md' 
-                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                    >
-                        {cat.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Loading State */}
-            {isLoading ? (
-                <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div></div>
-            ) : (
-                /* Grid de Materiais */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredMaterials.length > 0 ? filteredMaterials.map((item) => (
-                        <div key={item.id} className="bg-white dark:bg-brand-dark-card rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-lg transition-all flex flex-col overflow-hidden group relative">
-                            
-                            {/* Botão de Delete (Admin Only) */}
-                            {isAdmin && (
-                                <button 
-                                    onClick={() => handleDeleteMaterial(item.id)}
-                                    className="absolute top-2 right-2 z-10 bg-white/80 dark:bg-black/50 hover:bg-red-100 p-2 rounded-full text-red-500 shadow-sm backdrop-blur-sm transition-colors"
-                                    title="Excluir Material"
-                                >
-                                    <TrashIcon />
-                                </button>
-                            )}
-
-                            {item.type === 'image' ? (
-                                // Card de Imagem
-                                <>
-                                    <div className={`h-48 w-full bg-gray-100 dark:bg-black/30 flex items-center justify-center relative overflow-hidden group-hover:bg-gray-200 transition-colors`}>
-                                        {item.image_url ? (
-                                            <img 
-                                                src={formatImgurUrl(item.image_url)} 
-                                                alt={item.title} 
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                                                onError={(e) => {
-                                                    // Fallback em caso de erro no link
-                                                    (e.target as HTMLImageElement).onerror = null;
-                                                    (e.target as HTMLImageElement).src = "https://placehold.co/600x400/f3f4f6/9ca3af?text=Imagem+Indispon%C3%ADvel";
-                                                }}
-                                            />
-                                        ) : (
-                                            <PhotoIcon className="w-12 h-12 text-gray-300" />
-                                        )}
-                                        <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-bold uppercase">
-                                            Imagem
-                                        </div>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col">
-                                        <h3 className="font-bold text-gray-800 dark:text-white mb-1">{item.title}</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex-1">{item.description}</p>
-                                        <button 
-                                            onClick={() => handleDownload(item.image_url || '')}
-                                            className="w-full py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-brand-green-dark hover:text-white dark:hover:bg-brand-green-dark transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <DownloadIcon /> Baixar / Ver Imagem
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                // Card de Texto
-                                <>
-                                    <div className="p-5 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                                        <div className="flex justify-between items-start">
-                                            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 p-2 rounded-lg">
-                                                <ClipboardCopyIcon />
-                                            </div>
-                                            <span className="text-xs font-bold text-gray-400 uppercase">Script</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col">
-                                        <h3 className="font-bold text-gray-800 dark:text-white mb-2">{item.title}</h3>
-                                        <div className="bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-lg text-xs text-gray-600 dark:text-gray-400 font-mono mb-4 flex-1 border border-yellow-100 dark:border-yellow-800 italic relative overflow-y-auto max-h-32">
-                                            "{item.content}"
-                                        </div>
-                                        <button 
-                                            onClick={() => handleCopy(item.content || '')}
-                                            className="w-full py-2 bg-brand-green-dark text-white rounded-lg text-sm font-bold hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <ClipboardCopyIcon /> Copiar Texto
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )) : (
-                        <div className="col-span-3 text-center py-12 text-gray-400">
-                            <p>Nenhum material encontrado nesta categoria.</p>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Modal de Adicionar Material (Admin) */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-fade-in">
-                        <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Adicionar Novo Material</h3>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Tipo de Conteúdo</label>
-                                <div className="flex gap-2">
-                                    <button 
-                                        onClick={() => setNewMaterial({...newMaterial, type: 'image'})}
-                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'image' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
-                                    >
-                                        Imagem (Post)
-                                    </button>
-                                    <button 
-                                        onClick={() => setNewMaterial({...newMaterial, type: 'text'})}
-                                        className={`flex-1 py-2 rounded border font-bold text-sm ${newMaterial.type === 'text' ? 'bg-brand-green-dark text-white border-transparent' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
-                                    >
-                                        Texto (Script)
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Categoria</label>
-                                <select 
-                                    className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
-                                    value={newMaterial.category}
-                                    onChange={(e) => setNewMaterial({...newMaterial, category: e.target.value})}
-                                >
-                                    <option value="products">Produtos</option>
-                                    <option value="company">Empresa</option>
-                                    <option value="texts">Textos Prontos</option>
-                                    <option value="promo">Promoções</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Título do Material</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
-                                    placeholder="Ex: Card Promoção Copaíba"
-                                    value={newMaterial.title || ''}
-                                    onChange={(e) => setNewMaterial({...newMaterial, title: e.target.value})}
-                                />
-                            </div>
-
-                            {newMaterial.type === 'image' ? (
-                                <>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Link da Imagem (Imgur)</label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
-                                            placeholder="Cole o link do post do Imgur aqui"
-                                            value={newMaterial.image_url || ''}
-                                            onChange={(e) => setNewMaterial({...newMaterial, image_url: e.target.value})}
-                                        />
-                                        <p className="text-[10px] text-gray-400 mt-1">O sistema ajustará automaticamente links do Imgur.</p>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Descrição Curta</label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded dark:text-white"
-                                            placeholder="Ex: Use nos stories..."
-                                            value={newMaterial.description || ''}
-                                            onChange={(e) => setNewMaterial({...newMaterial, description: e.target.value})}
-                                        />
-                                    </div>
-                                </>
-                            ) : (
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Conteúdo do Texto</label>
-                                    <textarea 
-                                        className="w-full border dark:border-gray-700 bg-white dark:bg-black/20 p-2 rounded h-24 dark:text-white"
-                                        placeholder="Digite o script de venda aqui..."
-                                        value={newMaterial.content || ''}
-                                        onChange={(e) => setNewMaterial({...newMaterial, content: e.target.value})}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex gap-2 mt-6">
-                            <button onClick={() => setIsAddModalOpen(false)} className="flex-1 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium">Cancelar</button>
-                            <button onClick={handleAddMaterial} className="flex-1 py-3 bg-brand-green-dark text-white rounded-lg font-bold hover:bg-opacity-90">Salvar Material</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-const NewOrderScreen: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-    const { user, refreshData } = useConsultant();
-    const [boxes, setBoxes] = useState(1);
-    const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'pix'>('whatsapp');
-    const [pixStatus, setPixStatus] = useState<'idle' | 'loading' | 'generated'>('idle');
-    const [pixData, setPixData] = useState({ qrCode: '', copyPaste: '' });
-    
-    if (!isOpen) return null;
-
-    const boxPrice = BUSINESS_RULES.BOX_PRICE;
-    const subtotal = boxes * boxPrice;
-    const hasFreeShipping = boxes >= BUSINESS_RULES.FREE_SHIPPING_THRESHOLD;
-    
-    const createInfinitePayPixTransaction = async () => {
-        setPixStatus('loading');
-        try {
-            // Simulação robusta de chamada à API da InfinitePay (V2)
-            // Em produção, você deve configurar o CORS ou usar uma Edge Function
-            const response = await fetch('https://api.infinitepay.io/v2/transactions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${INFINITEPAY_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    amount: Math.round(subtotal * 100), // em centavos
-                    capture_method: "pix",
-                    metadata: {
-                        order_id: `PED-${Date.now()}`,
-                        customer_id: user?.id,
-                        customer_name: user?.name
-                    }
-                })
-            });
-            
-            const data = await response.json();
-
-            if (data.id) {
-                 setPixData({
-                     qrCode: data.attributes?.pix_qr_code_url,
-                     copyPaste: data.attributes?.br_code
-                 });
-                 setPixStatus('generated');
-                 
-                 // Registrar venda no banco de dados para disparar trigger de notificação
-                 await supabase.from('sales').insert([{
-                     consultant_id: user?.id,
-                     quantity: boxes,
-                     total_amount: subtotal
-                 }]);
-                 
-                 refreshData();
-            } else {
-                // Fallback para simulação visual
-                 setTimeout(async () => {
-                     setPixData({
-                         qrCode: "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA",
-                         copyPaste: "00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA"
-                     });
-                     setPixStatus('generated');
-                     
-                     // Registrar venda (simulado)
-                     await supabase.from('sales').insert([{
-                        consultant_id: user?.id,
-                        quantity: boxes,
-                        total_amount: subtotal
-                     }]);
-                     refreshData();
-                 }, 1500);
-            }
-
-        } catch (e) {
-            console.error("Erro na integração InfinitePay:", e);
-            setTimeout(async () => {
-                setPixData({
-                    qrCode: "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA",
-                    copyPaste: "00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913Brotos da Terra6008Salvador62070503***6304E2CA"
-                });
-                setPixStatus('generated');
-                await supabase.from('sales').insert([{
-                    consultant_id: user?.id,
-                    quantity: boxes,
-                    total_amount: subtotal
-                }]);
-                refreshData();
-            }, 1500);
-        }
-    };
-
-    const handleWhatsAppOrder = async () => {
-        const shippingText = hasFreeShipping ? "*Frete Grátis!* 🚚" : "*Frete a calcular*";
-        
-        const message = 
-`Olá, sou o consultor *${user?.name}* (ID: ${user?.id}).
-
-🛒 *NOVO PEDIDO CLUBE BROTOS*
-
-📦 *${boxes}x Caixas Fechadas* (${BUSINESS_RULES.UNITS_PER_BOX}un/caixa)
-💰 Valor Unit. Caixa: R$ ${boxPrice.toFixed(2).replace('.', ',')}
-💲 *Total Pedido: R$ ${subtotal.toFixed(2).replace('.', ',')}*
-📍 ${shippingText}
-
-📍 *Endereço de Entrega:*
-${user?.address}
-
-Aguardo dados PIX para pagamento.`;
-
-        // Registra a "Intenção de Venda" no banco para fins de notificação
-        await supabase.from('sales').insert([{
-            consultant_id: user?.id,
-            quantity: boxes,
-            total_amount: subtotal
-        }]);
-        
-        refreshData();
-
-        window.open(`https://wa.me/5571999999999?text=${encodeURIComponent(message)}`, '_blank');
-        onClose();
-    };
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-            <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-slide-up">
-                <div className="bg-brand-green-dark p-4 flex justify-between items-center text-white shadow-md shrink-0">
-                    <h3 className="text-lg font-bold flex items-center gap-2"><ShoppingCartIcon /> Novo Pedido</h3>
-                    <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1 transition"><CloseIcon className="h-6 w-6 text-white" /></button>
-                </div>
-                
-                <div className="p-6 overflow-y-auto">
-                    {/* Produto Principal */}
-                    <div className="flex flex-col md:flex-row gap-6 mb-8">
-                        <div className="w-full md:w-1/3">
-                            <div className="bg-gray-100 dark:bg-black/20 rounded-xl p-4 flex items-center justify-center aspect-square mb-2">
-                                <img src="https://imgur.com/CGgz38b.png" alt="Caixa Pomada" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
-                            </div>
-                            <p className="text-center text-xs text-gray-500 dark:text-gray-400">Imagem ilustrativa</p>
-                        </div>
-                        
-                        <div className="w-full md:w-2/3 flex flex-col justify-between">
-                            <div>
-                                <div className="flex justify-between items-start mb-2">
-                                    <h4 className="text-xl font-bold text-gray-800 dark:text-white">Caixa Display - Pomada Copaíba</h4>
-                                    <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-bold px-2 py-1 rounded-full">Atacado</span>
-                                </div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Contém 12 unidades de 15g cada. Fórmula original Brotos da Terra.</p>
-                                
-                                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700 mb-4">
-                                    <span className="text-gray-600 dark:text-gray-300 text-sm">Preço por Caixa:</span>
-                                    <span className="text-xl font-bold text-brand-green-dark dark:text-green-400">R$ {boxPrice.toFixed(2).replace('.',',')}</span>
-                                </div>
-                            </div>
-
-                            {/* Seletor de Quantidade */}
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Quantidade de Caixas</label>
-                                <div className="flex items-center gap-4 mb-4">
-                                    <button onClick={() => setBoxes(Math.max(1, boxes - 1))} className="w-12 h-12 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-xl transition text-gray-600 dark:text-gray-200">-</button>
-                                    <div className="flex-1 bg-white dark:bg-black/20 border-2 border-gray-200 dark:border-gray-700 rounded-xl h-12 flex items-center justify-center">
-                                        <span className="text-2xl font-bold text-brand-green-dark dark:text-green-400">{boxes}</span>
-                                    </div>
-                                    <button onClick={() => setBoxes(boxes + 1)} className="w-12 h-12 flex items-center justify-center bg-brand-green-dark text-white rounded-xl hover:bg-opacity-90 font-bold text-xl transition">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Regras e Benefícios */}
-                    <div className="mb-6">
-                        {/* Frete */}
-                        <div className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${hasFreeShipping ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'}`}>
-                            <div className={`p-2 rounded-full ${hasFreeShipping ? 'bg-green-500 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'}`}>
-                                <TruckIcon />
-                            </div>
-                            <div>
-                                <p className={`font-bold text-sm ${hasFreeShipping ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                                    {hasFreeShipping ? 'Frete Grátis Aplicado!' : 'Frete não incluso'}
-                                </p>
-                                {!hasFreeShipping && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Faltam {BUSINESS_RULES.FREE_SHIPPING_THRESHOLD - boxes} caixas para frete grátis.</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Método de Pagamento Tabs */}
-                    <div className="mb-6">
-                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Forma de Pagamento</label>
-                        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
-                            <button 
-                                onClick={() => setPaymentMethod('whatsapp')}
-                                className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === 'whatsapp' ? 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
-                            >
-                                <WhatsAppIcon /> Negociar (WhatsApp)
-                            </button>
-                            <button 
-                                onClick={() => setPaymentMethod('pix')}
-                                className={`flex-1 py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === 'pix' ? 'bg-white dark:bg-gray-700 text-brand-green-dark dark:text-green-400 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
-                            >
-                                <QrCodeIcon className="w-5 h-5" /> Pagar Online (PIX)
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Conteúdo de Pagamento */}
-                    {paymentMethod === 'whatsapp' ? (
-                         <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-100 dark:border-green-900/50 mb-6 text-center">
-                            <p className="text-green-800 dark:text-green-300 font-medium mb-2">Você será redirecionado para o WhatsApp Oficial.</p>
-                            <p className="text-sm text-green-600 dark:text-green-400">Lá, nossa equipe confirmará o estoque e enviará os dados bancários manualmente.</p>
-                        </div>
-                    ) : (
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mb-6">
-                            {pixStatus === 'idle' && (
-                                <div className="text-center py-4">
-                                    <p className="text-gray-600 dark:text-gray-300 mb-4">Pague com PIX Automático (InfinitePay) e seu pedido será processado imediatamente.</p>
-                                    <button onClick={createInfinitePayPixTransaction} className="bg-brand-green-dark text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-opacity-90 transition-all w-full">
-                                        Gerar Código PIX
-                                    </button>
-                                </div>
-                            )}
-                            {pixStatus === 'loading' && (
-                                <div className="text-center py-8">
-                                    <div className="w-8 h-8 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Gerando pagamento seguro...</p>
-                                </div>
-                            )}
-                            {pixStatus === 'generated' && (
-                                <div className="text-center">
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Escaneie o QR Code abaixo:</p>
-                                    <div className="bg-white p-2 inline-block rounded-lg shadow-sm mb-4 border border-gray-200">
-                                        <img src={pixData.qrCode} alt="QR Code Pix" className="w-48 h-48 object-contain" />
-                                    </div>
-                                    <div className="bg-white dark:bg-black/20 border border-gray-300 dark:border-gray-700 rounded-lg p-3 flex items-center gap-2 mb-4">
-                                        <input type="text" readOnly value={pixData.copyPaste} className="w-full text-xs text-gray-500 dark:text-gray-300 bg-transparent outline-none font-mono truncate" />
-                                        <button onClick={() => {navigator.clipboard.writeText(pixData.copyPaste); alert('Copiado!');}} className="text-brand-green-dark dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 p-2 rounded transition">
-                                            <DocumentDuplicateIcon className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/20 p-2 rounded-lg">
-                                        <CheckCircleIcon /> Aguardando pagamento...
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Resumo Financeiro */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-6">
-                        <div className="flex justify-between items-center">
-                            <span className="font-bold text-gray-800 dark:text-white text-lg">Total a Pagar:</span>
-                            <span className="font-bold text-brand-green-dark dark:text-green-400 text-2xl">R$ {subtotal.toFixed(2).replace('.',',')}</span>
-                        </div>
-                    </div>
-
-                    {paymentMethod === 'whatsapp' && (
-                        <button onClick={handleWhatsAppOrder} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg transform active:scale-[0.99] transition-all flex justify-center items-center gap-2 text-lg">
-                            <WhatsAppIcon /> Finalizar no WhatsApp
-                        </button>
-                    )}
-                    {paymentMethod === 'pix' && pixStatus === 'generated' && (
-                         <button onClick={onClose} className="w-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white py-4 rounded-xl font-bold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">
-                            Já paguei (Fechar)
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const NotificationsPanel: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-    const { notifications, markNotificationAsRead } = useConsultant();
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="absolute top-16 right-4 w-80 bg-white dark:bg-brand-dark-card rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-fade-in">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800">
-                <h3 className="font-bold text-gray-700 dark:text-white">Notificações</h3>
-                <button onClick={onClose}><CloseIcon className="w-5 h-5 text-gray-400" /></button>
-            </div>
-            <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
-                    <div className="p-8 text-center text-gray-400 text-sm">
-                        Nenhuma notificação nova.
-                    </div>
-                ) : (
-                    <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                        {notifications.map(n => (
-                            <div 
-                                key={n.id} 
-                                onClick={() => markNotificationAsRead(n.id)}
-                                className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${!n.read ? 'bg-green-50/50 dark:bg-green-900/20 border-l-4 border-brand-green-dark' : ''}`}
-                            >
-                                <div className="flex justify-between items-start mb-1">
-                                    <h4 className={`text-sm font-bold ${!n.read ? 'text-gray-800 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>{n.title}</h4>
-                                    <span className="text-[10px] text-gray-400">{new Date(n.created_at).toLocaleDateString()}</span>
-                                </div>
-                                <p className="text-xs text-gray-600 dark:text-gray-300">{n.message}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
 const DashboardShell: React.FC = () => {
-    const { user, stats, signOut, consultants, unreadCount } = useConsultant();
+    const { user, signOut, unreadCount } = useConsultant();
     const { theme, toggleTheme } = useContext(ThemeContext);
-    const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'materials' | 'business'>('home');
-    const [activeTeamTab, setActiveTeamTab] = useState<'active' | 'inactive'>('active');
-    const [isOrderOpen, setIsOrderOpen] = useState(false);
-    const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'home' | 'business' | 'materials' | 'university'>('home');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
 
-    const isAdmin = user?.role === 'admin';
-
-    const myTeam = isAdmin 
-        ? consultants 
-        : consultants.filter(c => c.parent_id === user?.id);
-    
-    const hasTeam = myTeam.length > 0;
-
-    // Filtro de Ativos/Inativos com lógica de 7 dias
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    const processedTeam = myTeam.map(member => {
-        // Como não carregamos todas as vendas aqui no contexto simplificado, 
-        // vamos simular a data da última venda baseada no ID para demonstração
-        // Em produção, faríamos um join ou query específica
-        const mockLastSaleDate = new Date(now.getTime() - (parseInt(member.id.slice(-2)) % 10) * 24 * 60 * 60 * 1000);
-        const daysSinceLastSale = Math.floor((now.getTime() - mockLastSaleDate.getTime()) / (1000 * 3600 * 24));
-        
-        return {
-            ...member,
-            lastSaleDate: mockLastSaleDate,
-            daysSinceLastSale,
-            isActive: daysSinceLastSale <= 7
-        };
-    });
-
-    const activeMembers = processedTeam.filter(m => m.isActive);
-    const inactiveMembers = processedTeam.filter(m => !m.isActive);
-    const currentList = activeTeamTab === 'active' ? activeMembers : inactiveMembers;
-
-    // Lógica de Nível de Exibição
+    // Determine Display Role logic
+    // Admin -> Admin
+    // Leader -> Distribuidor
+    // Consultant with Team and Active -> Distribuidor em Qualificação
+    // Consultant -> Consultor
     let displayRole = 'Consultor';
-
-    if (isAdmin) {
-        displayRole = 'Administrador Geral';
-    } else if (user?.role === 'leader') {
-        displayRole = 'Distribuidor';
-    } else if (activeMembers.length > 0) {
-        // Se tiver equipe E pelo menos um membro ativo (fez compra)
-        displayRole = 'Distribuidor em Qualificação';
+    if (user?.role === 'admin') displayRole = 'Administrador Geral';
+    else if (user?.role === 'leader') displayRole = 'Distribuidor';
+    else {
+        // Check qualification logic if needed, simplified here
+        displayRole = 'Consultor';
     }
 
-    // Lógica de Dashboard Administrativo
-    const topRecruiters = isAdmin ? React.useMemo(() => {
-        const counts: Record<string, number> = {};
-        consultants.forEach(c => {
-            if(c.parent_id && c.parent_id !== '000000') {
-                counts[c.parent_id] = (counts[c.parent_id] || 0) + 1;
-            }
-        });
-        return Object.entries(counts)
-            .map(([id, count]) => {
-                const leader = consultants.find(c => c.id === id);
-                return { id, name: leader?.name || 'Desconhecido', count };
-            })
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5); // Top 5
-    }, [consultants]) : [];
-
-    const recentSignups = isAdmin ? consultants
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5) : [];
-
-    const handleOpenShop = () => {
-        if (isAdmin) return;
-        setActiveTab('shop');
-        setIsOrderOpen(true);
-        setIsSidebarOpen(false);
-    };
-
-    const handleNav = (tab: typeof activeTab) => {
-        setActiveTab(tab);
-        setIsSidebarOpen(false);
-    };
-
-    // Função Admin para rodar verificação manual
-    const runInactivityCheck = async () => {
-        if(!isAdmin) return;
-        if(confirm("Deseja rodar a verificação de inatividade (7 dias) e enviar notificações?")) {
-            const { error } = await supabase.rpc('check_inactivity_7days');
-            if(error) alert("Erro: " + error.message);
-            else alert("Verificação concluída e notificações enviadas.");
-        }
-    };
+    const menuItems = [
+        { id: 'home', label: 'Visão Geral', icon: ChartBarIcon },
+        { id: 'business', label: 'Meu Negócio', icon: BriefcaseIcon },
+        { id: 'materials', label: 'Materiais', icon: PhotoIcon },
+        { id: 'university', label: 'UniBrotos', icon: AcademicCapIcon },
+    ];
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-brand-dark-bg font-sans relative transition-colors duration-300">
-            
-            {/* Overlay for Mobile Menu */}
+        <div className="min-h-screen bg-gray-50 dark:bg-brand-dark-bg flex transition-colors duration-300 font-sans">
+            {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
-                <div 
-                    className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity duration-300 md:hidden"
-                    onClick={() => setIsSidebarOpen(false)}
-                ></div>
+                <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>
             )}
 
-            {/* Sidebar Navigation (Fixed on Desktop, Drawer on Mobile) */}
+            {/* Sidebar Navigation */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-72 bg-brand-green-dark dark:bg-brand-dark-card text-white flex flex-col shadow-2xl 
-                transform transition-transform duration-300 ease-in-out
-                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:translate-x-0 md:shadow-none
+                fixed md:sticky top-0 left-0 z-50 h-screen w-72 bg-brand-green-dark dark:bg-brand-dark-card text-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
-                 {/* Close Button (Mobile Only) */}
-                 <button 
-                    onClick={() => setIsSidebarOpen(false)} 
-                    className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors md:hidden"
-                >
-                    <CloseIcon className="h-8 w-8 text-white" />
-                </button>
-
-                <div className="p-6 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
-                    <div className="flex items-center gap-3 mb-6 mt-2">
-                        <div className="p-2 bg-white rounded-lg shadow-lg w-full flex justify-center"><BrandLogo /></div>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 bg-black/20 rounded-xl backdrop-blur-sm border border-white/10">
-                        <div className="w-10 h-10 rounded-full bg-brand-earth text-white flex items-center justify-center font-bold shadow-inner flex-shrink-0">
-                            {user?.name?.charAt(0)}
+                <div className="p-6 flex flex-col items-center border-b border-white/10">
+                    <div className="bg-white p-2 rounded-xl mb-4 shadow-lg"><BrandLogo className="h-8 w-auto" /></div>
+                    <div className="text-center w-full">
+                        <div className="w-16 h-16 bg-brand-earth text-brand-green-dark rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-3 border-4 border-white/10 shadow-inner font-serif">
+                            {user?.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="overflow-hidden">
-                            <p className="font-bold text-sm truncate">{user?.name}</p>
-                            <p className="text-xs opacity-70 font-mono">ID: {user?.id}</p>
+                        <h3 className="font-bold text-lg truncate leading-tight">{user?.name}</h3>
+                        <p className="text-xs text-green-300 font-mono mb-3">ID: {user?.id}</p>
+                        <div className="bg-white/10 rounded-lg py-1 px-3 text-xs font-bold tracking-wider uppercase border border-white/20">
+                            {displayRole}
                         </div>
-                    </div>
-                    <div className="mt-3 px-3 py-1 bg-white/10 text-white/80 text-xs font-bold uppercase rounded border border-white/10 text-center shadow-sm">
-                        Nível: {displayRole}
                     </div>
                 </div>
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <button onClick={() => handleNav('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
-                        <ChartBarIcon /> Visão Geral
-                    </button>
 
-                    {!isAdmin && (
-                        <button onClick={() => handleNav('business')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'business' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
-                            <BriefcaseIcon /> Meu Negócio
+                <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                    {menuItems.map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => { setActiveTab(item.id as any); setIsSidebarOpen(false); }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${
+                                activeTab === item.id 
+                                ? 'bg-white text-brand-green-dark shadow-lg font-bold translate-x-1' 
+                                : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            <item.icon className={activeTab === item.id ? "w-6 h-6" : "w-5 h-5 opacity-70"} />
+                            {item.label}
                         </button>
-                    )}
-                    
-                    <button onClick={() => handleNav('materials')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'materials' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
-                        <PhotoIcon /> Materiais para Redes Sociais
-                    </button>
+                    ))}
 
-                    {!isAdmin && (
-                        <button onClick={handleOpenShop} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'shop' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10 text-yellow-300 font-bold'}`}>
-                            <ShoppingCartIcon /> Fazer Pedido
-                        </button>
-                    )}
-                    
-                    {(isAdmin || hasTeam) && (
-                        <button onClick={() => handleNav('team')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'team' ? 'bg-white text-brand-green-dark font-bold shadow-lg transform scale-105' : 'hover:bg-white/10'}`}>
-                            <UsersIcon /> {isAdmin ? 'Todos Consultores' : 'Minha Equipe'}
-                        </button>
-                    )}
-                    
                     <div className="pt-4 mt-4 border-t border-white/10">
-                        <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">Expansão</p>
-                        <button onClick={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-green-300 font-bold transition-colors">
-                            <PlusIcon /> Convidar Consultor
+                        <button 
+                            onClick={() => setIsNewOrderOpen(true)}
+                            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-yellow-400 hover:bg-yellow-400/10 transition-all font-bold"
+                        >
+                            <ShoppingCartIcon className="w-5 h-5" /> Fazer Pedido
                         </button>
                     </div>
                 </nav>
-                <div className="p-4 bg-black/10">
-                    <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 text-red-200 transition-colors"><LogoutIcon /> Sair do Sistema</button>
+
+                <div className="p-4 border-t border-white/10 bg-black/20">
+                    <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-2 text-red-300 hover:text-red-100 hover:bg-red-500/20 rounded-lg transition-colors text-sm font-bold">
+                        <LogoutIcon /> Sair do Sistema
+                    </button>
                 </div>
             </aside>
 
-            {/* Main Content Wrapper */}
-            <div className="flex flex-col min-h-screen md:ml-72 transition-all duration-300">
-                {/* Header (Sticky) */}
-                <div className="bg-white/90 dark:bg-brand-dark-card/90 text-brand-text dark:text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-sm backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
-                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-colors md:hidden"
-                        >
-                            <MenuIcon className="h-8 w-8 text-brand-green-dark dark:text-white" />
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+                {/* Header */}
+                <header className="bg-white dark:bg-brand-dark-card border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30 px-6 py-4 flex justify-between items-center shadow-sm transition-colors">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-brand-green-dark dark:text-white p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <MenuIcon className="w-8 h-8" />
                         </button>
-                        {/* Mobile Logo */}
-                        <div className="h-10 w-auto flex items-center justify-center md:hidden">
-                            <BrandLogo className="h-8 w-auto" />
-                        </div>
-                        {/* Desktop Welcome Text (Optional replacement for logo) */}
-                        <div className="hidden md:block">
-                            <h1 className="text-lg font-bold text-brand-green-dark dark:text-white font-serif">
-                                {activeTab === 'home' ? 'Visão Geral' : 
-                                 activeTab === 'business' ? 'Meu Negócio' :
-                                 activeTab === 'materials' ? 'Materiais' :
-                                 activeTab === 'team' ? 'Equipe' : 'Loja'}
-                            </h1>
-                        </div>
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white font-serif hidden md:block">
+                            {menuItems.find(i => i.id === activeTab)?.label}
+                        </h1>
                     </div>
-                    
-                    {/* Right side of header */}
-                    <div className="flex items-center gap-3 relative">
-                        <button 
-                            onClick={toggleTheme}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors text-gray-600 dark:text-gray-300"
-                        >
-                            {theme === 'light' ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
-                        </button>
 
-                        <button 
-                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                            className="relative p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
-                        >
-                            <BellIcon className="h-6 w-6 text-brand-green-dark dark:text-white" />
+                    <div className="flex items-center gap-4">
+                        <button onClick={toggleTheme} className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+                        </button>
+                        <div className="relative">
+                            <BellIcon className="text-gray-600 dark:text-gray-300 w-6 h-6" />
                             {unreadCount > 0 && (
-                                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white dark:border-brand-dark-card">
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full animate-pulse">
                                     {unreadCount}
                                 </span>
                             )}
-                        </button>
-
-                         <div className="w-8 h-8 rounded-full bg-brand-earth text-white flex items-center justify-center font-bold shadow-md text-sm cursor-default" title={user?.name}>
-                            {user?.name?.charAt(0)}
                         </div>
-
-                        <NotificationsPanel isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+                        <div className="w-10 h-10 bg-brand-earth text-white rounded-full flex items-center justify-center font-serif font-bold shadow-md md:hidden">
+                            {user?.name.charAt(0).toUpperCase()}
+                        </div>
                     </div>
-                </div>
+                </header>
 
-                {/* Page Content */}
-                <main className="flex-1 p-4 md:p-10 overflow-y-auto">
-                {activeTab === 'home' && (
-                    <div className="max-w-5xl mx-auto animate-fade-in space-y-6">
-                        <header className="mb-4 md:mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2 font-serif">Olá, {user?.name.split(' ')[0]}! 👋</h2>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base whitespace-pre-line">
-                                {isAdmin 
-                                    ? "Visão geral e monitoramento do sistema Brotos da Terra."
-                                    : "Parabéns pela decisão de se tornar uma consultora de vendas independente.\n\nAgora você pode construir seu negócio de sucesso de duas formas; como uma consultora de vendas e também como uma distribuidora independente de vendas."
-                                }
-                            </p>
-                        </header>
-
-                        {/* VISÃO DO ADMINISTRADOR */}
-                        {isAdmin ? (
-                            <div className="space-y-8">
-                                {/* 1. Cards de KPI (Key Performance Indicators) */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                                    <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl"><UsersIcon /></div>
-                                            <span className="text-xs font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded flex items-center gap-1"><TrendingUpIcon /> Total</span>
-                                        </div>
-                                        <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Total Consultores</h3>
-                                        <p className="text-3xl font-bold text-gray-800 dark:text-white mt-1">{stats.totalConsultants}</p>
-                                    </div>
-
-                                    <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl"><PlusIcon /></div>
-                                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">Mensal</span>
-                                        </div>
-                                        <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Novos em {new Date().toLocaleString('default', { month: 'long' })}</h3>
-                                        <p className="text-3xl font-bold text-gray-800 dark:text-white mt-1">{stats.newThisMonth}</p>
-                                    </div>
-
-                                    <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl"><UserCircleIcon /></div>
-                                            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded">Ativos</span>
-                                        </div>
-                                        <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Líderes de Equipe</h3>
-                                        <p className="text-3xl font-bold text-gray-800 dark:text-white mt-1">{stats.totalTeams}</p>
-                                    </div>
-
-                                    <div className="bg-gradient-to-br from-brand-green-dark to-green-800 dark:from-green-900 dark:to-black p-6 rounded-2xl shadow-lg text-white">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="p-3 bg-white/20 rounded-xl"><BanknotesIcon /></div>
-                                        </div>
-                                        <h3 className="text-white/70 font-medium text-sm uppercase tracking-wider">Faturamento Rede (Est.)</h3>
-                                        <p className="text-3xl font-bold mt-1">R$ {(stats.totalConsultants * 210).toLocaleString('pt-BR')}</p>
-                                        <p className="text-[10px] opacity-60 mt-2">Baseado em média de 1 cx/ativo</p>
-                                    </div>
-                                </div>
-
-                                {/* 2. Seção de Dados Detalhados */}
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* Coluna Esquerda: Ranking e Gráfico (Visual) */}
-                                    <div className="lg:col-span-2 space-y-6">
-                                        {/* Tabela de Últimos Cadastros */}
-                                        <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                                            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                                                <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 text-sm md:text-base"><CalendarIcon /> Últimos Cadastros</h3>
-                                                <button onClick={() => setActiveTab('team')} className="text-sm text-brand-green-dark dark:text-green-400 hover:underline">Ver todos</button>
-                                            </div>
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-left text-sm min-w-[500px]">
-                                                    <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold uppercase">
-                                                        <tr>
-                                                            <th className="p-4">Nome</th>
-                                                            <th className="p-4">ID</th>
-                                                            <th className="p-4">Data</th>
-                                                            <th className="p-4">Cidade</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                                        {recentSignups.map(c => (
-                                                            <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                                                <td className="p-4 font-medium text-gray-800 dark:text-gray-200">{c.name}</td>
-                                                                <td className="p-4 text-gray-500 dark:text-gray-400 font-mono">{c.id}</td>
-                                                                <td className="p-4 text-gray-500 dark:text-gray-400">{new Date(c.created_at).toLocaleDateString()}</td>
-                                                                <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{c.address?.split('-')[1] || 'N/A'}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                        {/* Gráfico Simulado de Crescimento */}
-                                        <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-                                            <h3 className="font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2 text-sm md:text-base"><PresentationChartLineIcon /> Crescimento da Rede (Semestral)</h3>
-                                            <div className="h-48 flex items-end justify-between gap-2 px-2">
-                                                {[35, 45, 40, 60, 75, 90].map((height, i) => (
-                                                    <div key={i} className="w-full flex flex-col items-center gap-2 group">
-                                                        <div 
-                                                            className="w-full bg-green-100 dark:bg-green-900/30 rounded-t-lg group-hover:bg-brand-green-dark dark:group-hover:bg-green-500 transition-all duration-500 relative" 
-                                                            style={{height: `${height}%`}}
-                                                        >
-                                                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                {height * 2}
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-xs text-gray-400 font-bold uppercase">
-                                                            {['Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov'][i]}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Coluna Direita: Top Líderes */}
-                                    <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 h-fit">
-                                        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-yellow-50 to-white dark:from-yellow-900/10 dark:to-transparent">
-                                            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2 text-yellow-700 dark:text-yellow-400 text-sm md:text-base">
-                                                <SparklesIcon /> Top Recrutadores
-                                            </h3>
-                                        </div>
-                                        <div className="p-2">
-                                            {topRecruiters.length > 0 ? topRecruiters.map((leader, idx) => (
-                                                <div key={leader.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0">
-                                                    <div className={`
-                                                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0
-                                                        ${idx === 0 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : idx === 1 ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' : idx === 2 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'}
-                                                    `}>
-                                                        {idx + 1}º
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-bold text-gray-800 dark:text-white text-sm truncate">{leader.name}</p>
-                                                        <p className="text-xs text-gray-400">ID: {leader.id}</p>
-                                                    </div>
-                                                    <div className="text-right shrink-0">
-                                                        <p className="font-bold text-brand-green-dark dark:text-green-400">{leader.count}</p>
-                                                        <p className="text-[10px] text-gray-400 uppercase">Indicados</p>
-                                                    </div>
-                                                </div>
-                                            )) : (
-                                                <div className="p-8 text-center text-gray-400 text-sm">Nenhum dado de recrutamento ainda.</div>
-                                            )}
-                                        </div>
-                                    </div>
+                {/* Content Body */}
+                <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
+                    {activeTab === 'home' && (
+                        <div className="space-y-10 animate-slide-up">
+                            {/* Welcome Section */}
+                            <div className="flex flex-col md:flex-row gap-6">
+                                <div className="flex-1">
+                                    <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2 font-serif">
+                                        Olá, {user?.name.split(' ')[0]}! 👋
+                                    </h2>
+                                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl">
+                                        Parabéns pela decisão de se tornar uma consultora de vendas independente. 
+                                        Agora você pode construir seu negócio de sucesso de duas formas; como uma 
+                                        consultora de vendas e também como uma distribuidora independente.
+                                    </p>
                                 </div>
                             </div>
-                        ) : (
-                        /* VISÃO DO CONSULTOR */
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* NOVO CARD INTERATIVO: Simulador de Ganhos */}
+
+                            {/* Business Model (Education) - Now on Top */}
+                            <BusinessModelSection 
+                                onRequestInvite={() => alert("Funcionalidade de convite será implementada em breve!")}
+                                onRequestOrder={() => setIsNewOrderOpen(true)}
+                            />
+
+                            {/* Earnings Simulator */}
+                            <div className="max-w-4xl mx-auto">
                                 <EarningsSimulator />
-                                
-                                {/* Card de Materiais para Redes Sociais (Novo Atalho no Dashboard) */}
-                                <div onClick={() => setActiveTab('materials')} className="bg-white dark:bg-brand-dark-card p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all cursor-pointer group flex flex-col">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-xl group-hover:bg-purple-100 dark:group-hover:bg-purple-900/40 transition-colors"><PhotoIcon /></div>
-                                        <span className="text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 px-2 py-1 rounded">Novo</span>
-                                    </div>
-                                    <h3 className="text-gray-500 dark:text-gray-400 font-medium text-sm uppercase tracking-wider">Divulgação</h3>
-                                    <p className="text-2xl font-bold text-gray-800 dark:text-white mt-1 mb-2">Materiais Prontos</p>
-                                    <p className="text-xs text-gray-400 mt-auto">Posts, cards e textos para suas redes sociais.</p>
-                                    <button className="mt-4 w-full py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg text-sm font-bold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors">
-                                        Ver Materiais
-                                    </button>
-                                </div>
-
-                                <div onClick={handleOpenShop} className="bg-brand-green-dark dark:bg-green-900 text-white p-6 rounded-3xl shadow-lg cursor-pointer hover:bg-opacity-90 transition-all relative overflow-hidden group">
-                                    <div className="relative z-10">
-                                        <h3 className="font-bold text-xl mb-1">Fazer Pedido</h3>
-                                        <p className="text-white/70 text-sm mb-4">Reabasteça seu estoque com preço de atacado.</p>
-                                        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg font-bold text-sm group-hover:bg-white/30 transition-all">
-                                            <ShoppingCartIcon /> Comprar Agora
-                                        </div>
-                                    </div>
-                                    <div className="absolute -bottom-4 -right-4 text-white/10 transform group-hover:scale-110 transition-transform duration-500">
-                                        <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                    </div>
-                                </div>
                             </div>
-                            
-                            {/* Atalho secundário para Minha Equipe (Aparece apenas se tiver indicados) */}
-                            {hasTeam && (
-                             <div className="mt-6 bg-white dark:bg-brand-dark-card p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full"><UsersIcon /></div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-800 dark:text-white">Minha Equipe</h3>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Você possui {myTeam.length} consultores indicados.</p>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => setActiveTab('team')} className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 font-bold text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
-                                        Gerenciar Equipe
-                                    </button>
-                                </div>
-                            </div>
-                            )}
-                        </>
-                        )}
-                    </div>
-                )}
-                
-                {/* Business Model Tab (NOVO - Atualizado) */}
-                {activeTab === 'business' && (
-                    <BusinessModelScreen 
-                        onRequestInvite={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}}
-                        onRequestOrder={() => {setIsOrderOpen(true); setIsSidebarOpen(false);}}
-                    />
-                )}
 
-                {/* Team Tab - Nova Estrutura Completa */}
-                {activeTab === 'team' && (
-                    <div className="max-w-5xl mx-auto animate-fade-in space-y-8">
-                        <header className="flex justify-between items-center">
-                            <div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">
-                                    {isAdmin ? 'Todos os Consultores' : 'Minha Equipe'}
-                                </h2>
-                                <p className="text-gray-500 dark:text-gray-400">Gerencie seus indicados e acompanhe o desempenho.</p>
-                            </div>
-                            {isAdmin && (
-                                <button onClick={runInactivityCheck} className="text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-3 py-1 rounded-lg font-bold text-gray-600 dark:text-gray-200">
-                                    ⚙️ Verificar Inatividade
-                                </button>
-                            )}
-                        </header>
-
-                        {/* Seção 1: Bonificações (Mockup Visual) */}
-                        {!isAdmin && hasTeam && (
-                            <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-black text-white rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 opacity-10 transform translate-x-8 -translate-y-8">
-                                    <BanknotesIcon className="w-48 h-48" />
-                                </div>
-                                <div className="relative z-10">
-                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><SparklesIcon className="w-5 h-5" /> Painel de Bonificações</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-blue-200 text-sm mb-1">Volume da Equipe (Mês)</p>
-                                            <p className="text-3xl font-bold">0 cx</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-blue-200 text-sm mb-1">Bônus Estimado</p>
-                                            <p className="text-3xl font-bold text-yellow-300">R$ 0,00</p>
-                                            <p className="text-[10px] opacity-70">Valores calculados após fechamento.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Abas Ativos / Inativos */}
-                        <div className="flex gap-2 mb-4">
-                             <button 
-                                onClick={() => setActiveTeamTab('active')}
-                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-white dark:bg-brand-dark-card text-gray-500 dark:text-gray-400'}`}
-                            >
-                                Ativos ({activeMembers.length})
-                            </button>
-                            <button 
-                                onClick={() => setActiveTeamTab('inactive')}
-                                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTeamTab === 'inactive' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' : 'bg-white dark:bg-brand-dark-card text-gray-500 dark:text-gray-400'}`}
-                            >
-                                Inativos ({inactiveMembers.length})
-                            </button>
+                            {/* Team Section at Bottom (Mockup for now if needed) */}
+                            {/* Could be expanded based on role */}
                         </div>
+                    )}
 
-                        {/* Seção 2: Meus Indicados (Tabela com Pedidos) */}
-                        <div className="bg-white dark:bg-brand-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                                <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                    {activeTeamTab === 'active' ? <CheckCircleIcon className="text-green-500" /> : <CloseIcon className="text-red-500" />}
-                                    {activeTeamTab === 'active' ? 'Consultores Ativos (Venda em 7 dias)' : 'Consultores Inativos (+7 dias sem venda)'}
-                                </h3>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm min-w-[700px]">
-                                    <thead className="bg-white dark:bg-brand-dark-card text-gray-500 dark:text-gray-400 font-bold uppercase border-b border-gray-100 dark:border-gray-800">
-                                        <tr>
-                                            <th className="p-4">Nome / ID</th>
-                                            <th className="p-4">Contato</th>
-                                            <th className="p-4">Localização</th>
-                                            <th className="p-4">{activeTeamTab === 'active' ? 'Último Pedido' : 'Dias sem Vender'}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                                        {currentList.length > 0 ? currentList.map((member) => {
-                                            return (
-                                                <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
-                                                    <td className="p-4">
-                                                        <div className="font-bold text-gray-800 dark:text-white">{member.name}</div>
-                                                        <div className="text-xs text-gray-400 font-mono">ID: {member.id}</div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <a 
-                                                            href={`https://wa.me/55${member.whatsapp.replace(/\D/g, '')}`} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 text-green-700 dark:text-green-400 px-3 py-1 rounded-lg text-xs font-bold transition-colors"
-                                                        >
-                                                            <WhatsAppIcon /> Falar
-                                                        </a>
-                                                    </td>
-                                                    <td className="p-4 text-gray-600 dark:text-gray-400">
-                                                        <div className="flex items-center gap-1">
-                                                            <LocationIcon />
-                                                            <span className="truncate max-w-[150px]">
-                                                                {member.address?.includes('-') 
-                                                                    ? member.address.split('-')[1].trim() 
-                                                                    : member.address || 'Não informado'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        {activeTeamTab === 'active' ? (
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-brand-green-dark dark:text-green-400">1 caixa(s)</span>
-                                                                <span className="text-[10px] text-gray-500 dark:text-gray-400">{member.lastSaleDate.toLocaleDateString()}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-red-500">{member.daysSinceLastSale} dias</span>
-                                                                <span className="text-[10px] text-gray-400">Última: {member.lastSaleDate.toLocaleDateString()}</span>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        }) : (
-                                            <tr>
-                                                <td colSpan={4} className="p-12 text-center text-gray-500 dark:text-gray-400">
-                                                    <div className="flex flex-col items-center justify-center gap-2">
-                                                        <UsersIcon className="w-12 h-12 text-gray-300 dark:text-gray-600" />
-                                                        <p>Nenhum consultor nesta lista.</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    {activeTab === 'business' && (
+                        <MyBusinessManagementScreen onRequestOrder={() => setIsNewOrderOpen(true)} />
+                    )}
 
-                {/* Materials Tab (Aba de Materiais - Visível para todos, Editável para Admin) */}
-                {activeTab === 'materials' && <SocialMediaMaterialsScreen />}
+                    {activeTab === 'materials' && (
+                        <SocialMediaMaterialsScreen />
+                    )}
 
-                {/* Shop Tab (Placeholder, as modal opens) */}
-                {activeTab === 'shop' && (
-                    <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-                        <div className="bg-green-100 dark:bg-green-900/20 p-6 rounded-full mb-4 text-brand-green-dark dark:text-green-400">
-                             <ShoppingCartIcon />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-white">Loja do Consultor</h3>
-                        <p className="text-gray-500 dark:text-gray-400 max-w-md mt-2">O catálogo de produtos foi aberto no formulário de pedido. Se fechou, clique abaixo para reabrir.</p>
-                        <button onClick={() => setIsOrderOpen(true)} className="mt-4 bg-brand-green-dark text-white px-6 py-2 rounded-lg font-bold">Abrir Pedido</button>
-                    </div>
-                )}
-
+                    {activeTab === 'university' && (
+                        <UniBrotosScreen />
+                    )}
+                </div>
             </main>
-            </div>
 
-            {/* Modals */}
-            <NewOrderScreen isOpen={isOrderOpen} onClose={() => {setIsOrderOpen(false); if(activeTab === 'shop') setActiveTab('home');}} />
-            <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} myId={user?.id || ''} />
-
+            {/* New Order Modal */}
+            <NewOrderScreen isOpen={isNewOrderOpen} onClose={() => setIsNewOrderOpen(false)} />
         </div>
     );
 };
 
-const MainScreenWrapper: React.FC = () => {
+const AppContent: React.FC = () => {
     const { user, loading } = useConsultant();
-    const [showRegister, setShowRegister] = useState(false);
-    const [referrerId, setReferrerId] = useState('000000');
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref');
-        if (ref) {
-            setReferrerId(ref);
-            setShowRegister(true);
-        }
-    }, []);
+    const [view, setView] = useState<'login' | 'register'>('login');
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-brand-dark-bg">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-green-dark"></div>
+            <div className="min-h-screen bg-brand-green-light dark:bg-brand-dark-bg flex items-center justify-center transition-colors">
+                <div className="flex flex-col items-center gap-4 animate-pulse">
+                    <BrandLogo className="h-16 w-auto opacity-50" />
+                    <div className="w-12 h-12 border-4 border-brand-green-dark border-t-transparent rounded-full animate-spin"></div>
+                </div>
             </div>
         );
     }
 
-    if (!user) {
-        if (showRegister) {
-            return <RegisterScreen referrerId={referrerId} onBack={() => setShowRegister(false)} />;
-        }
-        return <LoginScreen onSignup={() => {
-             setReferrerId('000000');
-             setShowRegister(true);
-        }} />;
+    if (user) {
+        return <DashboardShell />;
     }
 
-    return <DashboardShell />;
+    return view === 'login' 
+        ? <LoginScreen onSignup={() => setView('register')} /> 
+        : <RegisterScreen referrerId="000000" onBack={() => setView('login')} />;
 };
 
 export const ConsultantApp: React.FC = () => {
     return (
         <ThemeProvider>
             <ConsultantProvider>
-                <MainScreenWrapper />
+                <AppContent />
             </ConsultantProvider>
         </ThemeProvider>
     );
