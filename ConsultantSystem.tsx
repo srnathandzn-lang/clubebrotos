@@ -38,7 +38,11 @@ import {
     PlayCircleIcon,
     BellIcon,
     LeafIcon,
-    SparklesIcon
+    SparklesIcon,
+    ShareIcon,
+    ChatIcon,
+    StoreIcon,
+    WhatsAppIcon
 } from './components/Icons';
 import { Consultant, ConsultantStats, Sale, Notification, PrivateCustomer, PrivateSale } from './types';
 
@@ -431,7 +435,129 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
     );
 };
 
+// --- Public Store Component (For Customers) ---
+
+const PublicStoreScreen = ({ consultantId }: { consultantId: string }) => {
+    const [consultant, setConsultant] = useState<Consultant | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchConsultant = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('consultants')
+                    .select('*')
+                    .eq('id', consultantId)
+                    .single();
+                
+                if (error) throw error;
+                setConsultant(data);
+            } catch (err) {
+                setError('Consultor não encontrado.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchConsultant();
+    }, [consultantId]);
+
+    const handleBuy = () => {
+        if (consultant) {
+            const message = `Olá ${consultant.name}, vi sua loja online da Brotos e gostaria de fazer um pedido da Pomada Copaíba.`;
+            window.open(`https://wa.me/55${consultant.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+    };
+
+    if (loading) return <div className="min-h-screen flex items-center justify-center">Carregando loja...</div>;
+    if (error || !consultant) return <div className="min-h-screen flex items-center justify-center text-red-500">Loja não encontrada. Verifique o link.</div>;
+
+    return (
+        <div className="min-h-screen bg-gray-50 font-sans">
+             <div className="bg-brand-green-dark text-white p-6 text-center">
+                 <BrandLogo className="h-16 w-auto mx-auto mb-4" />
+                 <p className="text-green-200 uppercase tracking-wider text-sm">Loja Oficial do Consultor</p>
+                 <h1 className="text-2xl font-bold font-serif mt-1">{consultant.name}</h1>
+             </div>
+
+             <div className="max-w-4xl mx-auto p-6">
+                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                     <div className="md:flex">
+                         <div className="md:w-1/2 bg-green-50 flex items-center justify-center p-8">
+                             <PackageIcon className="w-48 h-48 text-brand-green-dark" />
+                         </div>
+                         <div className="md:w-1/2 p-8 flex flex-col justify-center">
+                             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-2">Pomada Copaíba</h2>
+                             <p className="text-gray-500 mb-6">Alívio imediato e natural para dores musculares. A força da natureza em sua casa.</p>
+                             
+                             <div className="flex items-center gap-4 mb-8">
+                                 <span className="text-4xl font-bold text-brand-green-dark">R$ 35,00</span>
+                                 <span className="text-sm text-gray-400 line-through">R$ 50,00</span>
+                             </div>
+
+                             <button 
+                                onClick={handleBuy}
+                                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                             >
+                                <WhatsAppIcon /> Comprar pelo WhatsApp
+                             </button>
+                             <p className="text-center text-xs text-gray-400 mt-4">
+                                 Você será redirecionado para o WhatsApp de {consultant.name} para finalizar o pedido.
+                             </p>
+                         </div>
+                     </div>
+                 </div>
+
+                 <div className="mt-12 text-center text-gray-500 text-sm">
+                     <p>Brotos da Terra - Distribuição e Representação</p>
+                     <p>Consultor Autorizado: {consultant.id}</p>
+                 </div>
+             </div>
+        </div>
+    );
+};
+
 // --- Inner Dashboard Components ---
+
+const InviteModal = ({ onClose, user }: { onClose: () => void, user: Consultant }) => {
+    const inviteLink = `${window.location.origin}?sponsor=${user.id}`;
+    
+    const copyLink = () => {
+        navigator.clipboard.writeText(inviteLink);
+        alert("Link copiado!");
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Convidar Consultor</h3>
+                    <button onClick={onClose}><CloseIcon className="h-6 w-6 text-gray-500" /></button>
+                </div>
+                
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl text-center mb-6">
+                    <ShareIcon className="h-12 w-12 text-green-600 mx-auto mb-2" />
+                    <p className="text-green-800 dark:text-green-300 font-medium">Expanda sua rede e ganhe bônus!</p>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Envie este link para o novo consultor:</p>
+                <div className="flex gap-2 mb-6">
+                    <input readOnly value={inviteLink} className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-600 dark:text-gray-300" />
+                    <button onClick={copyLink} className="bg-brand-green-dark text-white px-4 rounded-lg font-bold hover:bg-brand-green-mid transition-colors">
+                        Copiar
+                    </button>
+                </div>
+
+                <button 
+                    onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Olá! Quero te convidar para fazer parte da Brotos da Terra. Cadastre-se com meu link: ${inviteLink}`)}`, '_blank')}
+                    className="w-full py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                >
+                    <WhatsAppIcon /> Enviar no WhatsApp
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const BusinessModelSection = ({ onRequestInvite, onRequestOrder }: { onRequestInvite: () => void, onRequestOrder: () => void }) => {
     const [activeTab, setActiveTab] = useState<'sales' | 'leadership'>('sales');
@@ -601,6 +727,10 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
     const teamSales = team.reduce((acc, member) => acc + (Math.random() > 0.5 ? 2 : 0), 0); // Simulação
     const bonus = teamSales * 5; // 5 reais por caixa
 
+    const handleContact = (phone: string) => {
+        window.open(`https://wa.me/55${phone.replace(/\D/g, '')}`, '_blank');
+    }
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 mt-8">
             <div className="flex items-center justify-between mb-6">
@@ -662,13 +792,13 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                <a 
-                                                    href={`https://wa.me/${member.whatsapp}`} 
-                                                    target="_blank" 
-                                                    className="text-green-600 hover:text-green-700 font-medium text-xs flex items-center justify-end gap-1"
+                                                <button 
+                                                    onClick={() => handleContact(member.whatsapp)}
+                                                    className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg transition-colors"
+                                                    title="Enviar Mensagem"
                                                 >
-                                                    WhatsApp
-                                                </a>
+                                                    <ChatIcon className="h-4 w-4" />
+                                                </button>
                                             </td>
                                         </tr>
                                     )
@@ -959,250 +1089,94 @@ const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
 };
 
 const MyBusinessManagementScreen = ({ user }: { user: Consultant }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'sales' | 'customers' | 'stock'>('overview');
-    const [sales, setSales] = useState<PrivateSale[]>([]);
-    const [customers, setCustomers] = useState<PrivateCustomer[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [initialStock, setInitialStock] = useState(0);
-
-    // States for modals
-    const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-    const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+    // Now used for Team/Network Management (Expansion)
+    // Reusing TeamPerformanceSection but could be expanded with more network stats
+    const myTeam: Consultant[] = []; // Replace with real data query in prod
     
-    // Form states
-    const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', notes: '' });
-    const [newSale, setNewSale] = useState({ customerId: '', quantity: 1, price: 35.00 });
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        setLoading(true);
-        // Fetch customers
-        const { data: custData } = await supabase.from('private_customers').select('*');
-        if (custData) setCustomers(custData);
-
-        // Fetch sales
-        const { data: saleData } = await supabase.from('private_sales').select('*');
-        if (saleData) setSales(saleData);
-
-        // Mock fetching stock from main system purchases (this would be a real query in prod)
-        // For now, assume consultant bought 50 units total
-        setInitialStock(50); 
-        
-        setLoading(false);
-    };
-
-    const handleAddCustomer = async () => {
-        await supabase.from('private_customers').insert([{
-            consultant_id: user.id,
-            name: newCustomer.name,
-            phone: newCustomer.phone,
-            notes: newCustomer.notes
-        }]);
-        setIsCustomerModalOpen(false);
-        fetchData();
-    };
-
-    const handleAddSale = async () => {
-        await supabase.from('private_sales').insert([{
-            consultant_id: user.id,
-            customer_id: newSale.customerId || null,
-            quantity: newSale.quantity,
-            sale_price: newSale.price,
-            product_name: 'Pomada Copaíba'
-        }]);
-        setIsSaleModalOpen(false);
-        fetchData();
-    };
-
-    const totalSalesValue = sales.reduce((acc, curr) => acc + (curr.sale_price * curr.quantity), 0);
-    const totalSoldUnits = sales.reduce((acc, curr) => acc + curr.quantity, 0);
-    const currentStock = initialStock - totalSoldUnits;
-    const estimatedProfit = totalSalesValue - (totalSoldUnits * 17.50); // Cost 17.50
-
     return (
-        <div className="animate-fade-in max-w-6xl mx-auto">
-             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
-                <BriefcaseIcon className="h-8 w-8 text-brand-green-dark" />
-                Gestão do Meu Negócio
-            </h2>
-
-            {/* KPI Cards */}
-            <div className="grid md:grid-cols-4 gap-4 mb-8">
-                <button onClick={() => setActiveTab('overview')} className={`p-4 rounded-xl border text-left transition-all ${activeTab === 'overview' ? 'bg-green-50 border-green-500 ring-1 ring-green-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                    <div className="bg-green-100 w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-green-700"><PresentationChartLineIcon /></div>
-                    <p className="text-sm text-gray-500">Lucro Estimado</p>
-                    <p className="font-bold text-lg text-green-700">{formatCurrency(estimatedProfit)}</p>
-                </button>
-                 <button onClick={() => setActiveTab('sales')} className={`p-4 rounded-xl border text-left transition-all ${activeTab === 'sales' ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                    <div className="bg-blue-100 w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-blue-700"><CurrencyDollarIcon /></div>
-                    <p className="text-sm text-gray-500">Vendas Totais</p>
-                    <p className="font-bold text-lg">{formatCurrency(totalSalesValue)}</p>
-                </button>
-                 <button onClick={() => setActiveTab('customers')} className={`p-4 rounded-xl border text-left transition-all ${activeTab === 'customers' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                    <div className="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-purple-700"><UsersIcon /></div>
-                    <p className="text-sm text-gray-500">Clientes</p>
-                    <p className="font-bold text-lg">{customers.length}</p>
-                </button>
-                 <button onClick={() => setActiveTab('stock')} className={`p-4 rounded-xl border text-left transition-all ${activeTab === 'stock' ? 'bg-orange-50 border-orange-500 ring-1 ring-orange-500' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                    <div className="bg-orange-100 w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-orange-700"><PackageIcon /></div>
-                    <p className="text-sm text-gray-500">Estoque Atual</p>
-                    <p className="font-bold text-lg">{currentStock} un</p>
-                </button>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 min-h-[400px] p-6">
-                
-                {/* OVERVIEW TAB */}
-                {activeTab === 'overview' && (
-                    <div className="text-center py-10">
-                        <div className="inline-block p-4 bg-green-50 rounded-full mb-4">
-                            <ChartBarIcon className="h-12 w-12 text-green-600" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-white">Resumo do Negócio</h3>
-                        <p className="text-gray-500 mb-6">Use as abas acima para gerenciar suas vendas e clientes.</p>
-                        <button onClick={() => setIsSaleModalOpen(true)} className="bg-brand-green-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-green-mid">
-                            Registrar Nova Venda
-                        </button>
-                    </div>
-                )}
-
-                {/* SALES TAB */}
-                {activeTab === 'sales' && (
-                    <div>
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-lg text-gray-800 dark:text-white">Histórico de Vendas</h3>
-                            <button onClick={() => setIsSaleModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Nova Venda</button>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300">
-                                    <tr>
-                                        <th className="px-4 py-3 rounded-l-lg">Data</th>
-                                        <th className="px-4 py-3">Cliente</th>
-                                        <th className="px-4 py-3">Qtd</th>
-                                        <th className="px-4 py-3 text-right rounded-r-lg">Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                    {sales.map((sale) => {
-                                        const client = customers.find(c => c.id === sale.customer_id);
-                                        return (
-                                            <tr key={sale.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{new Date(sale.sale_date || sale.created_at).toLocaleDateString()}</td>
-                                                <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{client ? client.name : 'Venda Avulsa'}</td>
-                                                <td className="px-4 py-3">{sale.quantity}</td>
-                                                <td className="px-4 py-3 text-right font-bold text-green-600">{formatCurrency(sale.sale_price * sale.quantity)}</td>
-                                            </tr>
-                                        )
-                                    })}
-                                    {sales.length === 0 && <tr><td colSpan={4} className="text-center py-8 text-gray-400">Nenhuma venda registrada.</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* CUSTOMERS TAB */}
-                {activeTab === 'customers' && (
-                    <div>
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="font-bold text-lg text-gray-800 dark:text-white">Meus Clientes</h3>
-                            <button onClick={() => setIsCustomerModalOpen(true)} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Novo Cliente</button>
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {customers.map(customer => (
-                                <div key={customer.id} className="border border-gray-200 dark:border-gray-700 p-4 rounded-xl flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <div>
-                                        <p className="font-bold text-gray-900 dark:text-white">{customer.name}</p>
-                                        <p className="text-sm text-gray-500">{customer.phone}</p>
-                                    </div>
-                                    <a href={`https://wa.me/${customer.phone?.replace(/\D/g,'')}`} target="_blank" className="text-green-600 bg-green-50 p-2 rounded-lg hover:bg-green-100">
-                                        <span className="text-xs font-bold">WhatsApp</span>
-                                    </a>
-                                </div>
-                            ))}
-                             {customers.length === 0 && <p className="col-span-2 text-center py-8 text-gray-400">Nenhum cliente cadastrado.</p>}
-                        </div>
-                    </div>
-                )}
-
-                {/* STOCK TAB */}
-                {activeTab === 'stock' && (
-                    <div className="text-center py-12">
-                        <div className="inline-block p-6 bg-orange-50 rounded-full mb-4">
-                            <PackageIcon className="h-16 w-16 text-orange-400" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">{currentStock} Unidades</h3>
-                        <p className="text-gray-500">Disponíveis em estoque físico</p>
-                        <div className="mt-8 max-w-md mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-sm text-left">
-                            <div className="flex justify-between mb-2"><span>Estoque Inicial (Compras):</span> <span className="font-bold">{initialStock}</span></div>
-                            <div className="flex justify-between text-red-500"><span>Vendas Realizadas:</span> <span className="font-bold">-{totalSoldUnits}</span></div>
-                            <div className="border-t pt-2 mt-2 flex justify-between font-bold"><span>Saldo Atual:</span> <span>{currentStock}</span></div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* ADD CUSTOMER MODAL */}
-            {isCustomerModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Novo Cliente</h3>
-                        <div className="space-y-4">
-                            <input className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Nome do Cliente" value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} />
-                            <input className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Telefone / WhatsApp" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} />
-                            <input className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Observações (Opcional)" value={newCustomer.notes} onChange={e => setNewCustomer({...newCustomer, notes: e.target.value})} />
-                            <button onClick={handleAddCustomer} className="w-full bg-purple-600 text-white py-2 rounded font-medium">Salvar Cliente</button>
-                            <button onClick={() => setIsCustomerModalOpen(false)} className="w-full text-gray-500 py-2">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ADD SALE MODAL */}
-            {isSaleModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Registrar Venda</h3>
-                        <div className="space-y-4">
-                             <select className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" value={newSale.customerId} onChange={e => setNewSale({...newSale, customerId: e.target.value})}>
-                                <option value="">Venda Avulsa (Sem Cadastro)</option>
-                                {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                            <div className="flex gap-4">
-                                <div className="flex-1">
-                                    <label className="text-xs text-gray-500 mb-1 block">Quantidade</label>
-                                    <input type="number" min="1" className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" value={newSale.quantity} onChange={e => setNewSale({...newSale, quantity: Number(e.target.value)})} />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="text-xs text-gray-500 mb-1 block">Preço Unitário (R$)</label>
-                                    <input type="number" className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white" value={newSale.price} onChange={e => setNewSale({...newSale, price: Number(e.target.value)})} />
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded text-right font-bold text-gray-900 dark:text-white">
-                                Total: {formatCurrency(newSale.quantity * newSale.price)}
-                            </div>
-                            <button onClick={handleAddSale} className="w-full bg-blue-600 text-white py-2 rounded font-medium">Confirmar Venda</button>
-                            <button onClick={() => setIsSaleModalOpen(false)} className="w-full text-gray-500 py-2">Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+        <div className="animate-fade-in">
+             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Gestão da Minha Rede</h2>
+             <TeamPerformanceSection team={myTeam} />
         </div>
     )
+};
+
+const MyOrdersScreen = ({ user }: { user: Consultant }) => {
+    const [orders, setOrders] = useState<Sale[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            const { data, error } = await supabase
+                .from('sales')
+                .select('*')
+                .eq('consultant_id', user.id)
+                .order('created_at', { ascending: false });
+            
+            if (data) setOrders(data);
+            setLoading(false);
+        };
+        fetchOrders();
+    }, [user.id]);
+
+    return (
+        <div className="max-w-4xl mx-auto animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 flex items-center gap-2">
+                <PackageIcon className="h-8 w-8 text-brand-green-dark" />
+                Meus Pedidos
+            </h2>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300">
+                        <tr>
+                            <th className="px-6 py-4">Data</th>
+                            <th className="px-6 py-4">Resumo</th>
+                            <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {loading ? (
+                             <tr><td colSpan={4} className="text-center py-8 text-gray-500">Carregando...</td></tr>
+                        ) : orders.length === 0 ? (
+                             <tr><td colSpan={4} className="text-center py-8 text-gray-500">Nenhum pedido realizado ainda.</td></tr>
+                        ) : (
+                            orders.map(order => (
+                                <tr key={order.id}>
+                                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{new Date(order.created_at).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.quantity} Caixas</td>
+                                    <td className="px-6 py-4">
+                                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-bold uppercase">Confirmado</span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold">{formatCurrency(order.total_amount)}</td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 };
 
 const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consultant }) => {
     const [step, setStep] = useState(1);
     const [boxes, setBoxes] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'pix'>('whatsapp');
+    const [showFreeShippingToast, setShowFreeShippingToast] = useState(false);
     
     const pricePerBox = 210;
     const total = boxes * pricePerBox;
     const shipping = boxes >= 4 ? 0 : 35;
+
+    useEffect(() => {
+        if (boxes === 4) {
+            setShowFreeShippingToast(true);
+            const timer = setTimeout(() => setShowFreeShippingToast(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [boxes]);
 
     // InfinitePay Logic (Mock)
     const handleGeneratePix = async () => {
@@ -1212,7 +1186,16 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative">
+                
+                {/* Free Shipping Toast */}
+                {showFreeShippingToast && (
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded-full shadow-lg z-50 animate-slide-up flex items-center gap-2">
+                        <SparklesIcon className="h-5 w-5 text-yellow-300" />
+                        <span className="font-bold">Parabéns! Você ganhou Frete Grátis!</span>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="bg-brand-green-dark p-4 flex justify-between items-center text-white">
                     <h3 className="font-bold text-lg flex items-center gap-2">
@@ -1245,10 +1228,15 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
                                 </div>
                             </div>
 
-                            {boxes < 4 && (
+                            {boxes < 4 ? (
                                 <div className="bg-orange-50 text-orange-800 p-3 rounded-lg text-sm flex items-center gap-2">
                                     <TruckIcon />
                                     Faltam {4 - boxes} caixas para FRETE GRÁTIS!
+                                </div>
+                            ) : (
+                                <div className="bg-green-50 text-green-800 p-3 rounded-lg text-sm flex items-center gap-2">
+                                    <CheckCircleIcon className="h-5 w-5" />
+                                    Frete Grátis Aplicado!
                                 </div>
                             )}
 
@@ -1343,6 +1331,7 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
     const [activeTab, setActiveTab] = useState('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
     const { isDarkMode, toggleTheme } = useTheme();
     
     // Mock Data
@@ -1372,12 +1361,19 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
         <div className={`min-h-screen flex transition-colors duration-300 ${isDarkMode ? 'dark bg-brand-dark-bg' : 'bg-gray-50'}`}>
             
             {/* Sidebar (Desktop) */}
-            <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-brand-dark-card border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 z-30 shadow-lg">
+            <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-brand-dark-card border-r border-gray-200 dark:border-gray-700 h-screen sticky top-0 z-30 shadow-lg overflow-y-auto">
                 <div className="p-8 flex flex-col items-center border-b border-gray-100 dark:border-gray-700">
                     <BrandLogo className="h-14 w-auto mb-4" />
-                    <div className="bg-brand-green-light dark:bg-green-900/30 text-brand-green-dark dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <div className="bg-brand-green-light dark:bg-green-900/30 text-brand-green-dark dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-center">
                         {displayRole}
                     </div>
+                    <a 
+                        href={`${window.location.origin}?store=${user.id}`}
+                        target="_blank"
+                        className="mt-2 text-xs text-blue-500 hover:underline flex items-center gap-1"
+                    >
+                        <StoreIcon className="h-3 w-3" /> Minha Loja
+                    </a>
                 </div>
                 
                 <div className="p-6">
@@ -1393,19 +1389,33 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
 
                     <nav className="space-y-1">
                         <NavItem id="overview" label="Visão Geral" icon={ChartBarIcon} />
-                        <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
                         <NavItem id="materials" label="Materiais" icon={PhotoIcon} />
                         <NavItem id="unibrotos" label="UniBrotos" icon={AcademicCapIcon} />
-                        {(user.role === 'admin' || myTeam.length > 0) && (
-                             <NavItem id="team" label="Minha Equipe" icon={UsersIcon} />
-                        )}
+                        <NavItem id="my-orders" label="Meus Pedidos" icon={PackageIcon} />
+                        
                         <button 
                             onClick={() => setIsNewOrderOpen(true)}
-                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-amber-600 hover:bg-amber-50 font-medium mt-4"
+                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-amber-600 hover:bg-amber-50 font-medium mt-2 mb-2"
                         >
                             <ShoppingCartIcon className="h-5 w-5" />
                             <span>Fazer Pedido</span>
                         </button>
+
+                        <div className="pt-4 pb-2">
+                             <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Expansão</p>
+                        </div>
+
+                         <button 
+                            onClick={() => setIsInviteOpen(true)}
+                            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-brand-green-dark dark:hover:text-white transition-all duration-200"
+                        >
+                            <ShareIcon className="h-5 w-5" />
+                            <span>Convidar Consultor</span>
+                        </button>
+
+                        {(user.role === 'admin' || myTeam.length > 0) && (
+                             <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
+                        )}
                     </nav>
                 </div>
 
@@ -1442,26 +1452,40 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                 {isMobileMenuOpen && (
                     <div className="fixed inset-0 z-50 lg:hidden">
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-                        <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-brand-dark-card shadow-2xl p-6 flex flex-col">
+                        <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-brand-dark-card shadow-2xl p-6 flex flex-col overflow-y-auto">
                             <div className="flex justify-between items-center mb-8">
                                 <BrandLogo className="h-8 w-auto" />
                                 <button onClick={() => setIsMobileMenuOpen(false)}><CloseIcon className="h-6 w-6 text-gray-500" /></button>
                             </div>
                             <nav className="space-y-1">
                                 <NavItem id="overview" label="Visão Geral" icon={ChartBarIcon} />
-                                <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
                                 <NavItem id="materials" label="Materiais" icon={PhotoIcon} />
                                 <NavItem id="unibrotos" label="UniBrotos" icon={AcademicCapIcon} />
-                                {(user.role === 'admin' || myTeam.length > 0) && (
-                                    <NavItem id="team" label="Minha Equipe" icon={UsersIcon} />
-                                )}
+                                <NavItem id="my-orders" label="Meus Pedidos" icon={PackageIcon} />
+                                
                                 <button 
                                     onClick={() => { setIsNewOrderOpen(true); setIsMobileMenuOpen(false); }}
-                                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-amber-600 hover:bg-amber-50 font-medium mt-4"
+                                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-amber-600 hover:bg-amber-50 font-medium mt-2 mb-2"
                                 >
                                     <ShoppingCartIcon className="h-5 w-5" />
                                     <span>Fazer Pedido</span>
                                 </button>
+
+                                <div className="pt-4 pb-2">
+                                     <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Expansão</p>
+                                </div>
+
+                                 <button 
+                                    onClick={() => { setIsInviteOpen(true); setIsMobileMenuOpen(false); }}
+                                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-brand-green-dark dark:hover:text-white transition-all duration-200"
+                                >
+                                    <ShareIcon className="h-5 w-5" />
+                                    <span>Convidar Consultor</span>
+                                </button>
+
+                                {(user.role === 'admin' || myTeam.length > 0) && (
+                                    <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
+                                )}
                             </nav>
                              <div className="mt-auto border-t pt-4">
                                 <button onClick={onLogout} className="flex items-center gap-2 text-gray-500 hover:text-red-600">
@@ -1487,32 +1511,26 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                             </div>
 
                             <BusinessModelSection 
-                                onRequestInvite={() => setActiveTab('team')}
+                                onRequestInvite={() => { setIsInviteOpen(true); }}
                                 onRequestOrder={() => setIsNewOrderOpen(true)}
                             />
                             
                             <EarningsSimulator />
-
-                            <TeamPerformanceSection team={myTeam} />
                         </>
                     )}
 
-                    {activeTab === 'business' && <MyBusinessManagementScreen user={user} />}
-                    
                     {activeTab === 'materials' && <SocialMediaMaterialsScreen user={user} />}
                     
                     {activeTab === 'unibrotos' && <UniBrotosScreen user={user} />}
+                    
+                    {activeTab === 'my-orders' && <MyOrdersScreen user={user} />}
 
-                    {activeTab === 'team' && (
-                        <div className="animate-fade-in">
-                             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Gestão de Equipe</h2>
-                             <TeamPerformanceSection team={myTeam} />
-                        </div>
-                    )}
+                    {activeTab === 'business' && <MyBusinessManagementScreen user={user} />}
                 </div>
             </main>
 
             {isNewOrderOpen && <NewOrderScreen user={user} onClose={() => setIsNewOrderOpen(false)} />}
+            {isInviteOpen && <InviteModal user={user} onClose={() => setIsInviteOpen(false)} />}
 
         </div>
     );
@@ -1520,10 +1538,19 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
 
 export const ConsultantApp = () => {
     const [user, setUser] = useState<Consultant | null>(null);
-    const [view, setView] = useState<'login' | 'register'>('login');
+    const [view, setView] = useState<'login' | 'register' | 'store'>('login');
+    const [storeId, setStoreId] = useState('');
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
+        // Check for store link
+        const params = new URLSearchParams(window.location.search);
+        const storeParam = params.get('store');
+        if (storeParam) {
+            setStoreId(storeParam);
+            setView('store');
+        }
+
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             setIsDarkMode(true);
         }
@@ -1540,6 +1567,8 @@ export const ConsultantApp = () => {
         setUser(null);
         setView('login');
     };
+
+    if (view === 'store') return <PublicStoreScreen consultantId={storeId} />;
 
     return (
         <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
