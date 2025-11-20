@@ -159,56 +159,164 @@ const EarningsSimulator: React.FC = () => {
     );
 };
 
-// --- Componente: Modelo de Negócio (NOVO) ---
-const BusinessModelScreen: React.FC = () => {
+// --- Componente: Modelo de Negócio (NOVO - Redesenhado) ---
+const BusinessModelScreen: React.FC<{ onRequestInvite: () => void; onRequestOrder: () => void }> = ({ onRequestInvite, onRequestOrder }) => {
+    const [activeTab, setActiveTab] = useState<'sales' | 'team'>('sales');
+
     return (
         <div className="max-w-5xl mx-auto animate-fade-in">
-            {/* Cabeçalho idêntico ao EarningsSimulator para consistência visual */}
-            <div className="bg-brand-green-dark rounded-3xl p-8 text-white relative overflow-hidden shadow-lg mb-8">
-                <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
-                    <HandshakeIcon className="h-32 w-32" />
+            {/* Hero Section */}
+            <div className="bg-brand-green-dark rounded-3xl p-8 md:p-12 text-white relative overflow-hidden shadow-2xl mb-8">
+                <div className="absolute top-0 right-0 opacity-10 transform translate-x-8 -translate-y-8">
+                    <HandshakeIcon className="h-64 w-64" />
                 </div>
-                <h3 className="font-serif text-2xl md:text-3xl font-bold mb-3 leading-tight relative z-10">
-                    Faça seu negócio do seu jeito
-                </h3>
-                <p className="text-green-100 text-sm md:text-base opacity-90 max-w-2xl relative z-10">
-                    Você pode construir seu negócio do seu jeito.
-                    Escolha como quer atuar: apenas com vendas diretas ou construindo também o seu próprio time.
-                    Você define onde vai atuar, quanto tempo vai dedicar e quanto quer ganhar.
-                </p>
+                <div className="relative z-10 max-w-2xl">
+                    <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 leading-tight">
+                        Faça seu negócio do seu jeito
+                    </h2>
+                    <p className="text-green-100 text-base md:text-lg opacity-90 leading-relaxed mb-6">
+                        A liberdade é o nosso principal pilar. Você escolhe como quer atuar: 
+                        apenas com vendas diretas focadas em lucro rápido, ou construindo 
+                        um legado através da formação de equipes.
+                    </p>
+                    
+                    {/* Tab Switcher */}
+                    <div className="inline-flex bg-green-900/30 backdrop-blur-sm p-1 rounded-full border border-white/10">
+                        <button 
+                            onClick={() => setActiveTab('sales')}
+                            className={`px-6 py-3 rounded-full text-sm md:text-base font-bold transition-all duration-300 flex items-center gap-2 ${
+                                activeTab === 'sales' 
+                                ? 'bg-white text-brand-green-dark shadow-lg transform scale-105' 
+                                : 'text-green-100 hover:bg-white/10'
+                            }`}
+                        >
+                            <ShoppingCartIcon className="w-4 h-4" /> Venda Direta
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('team')}
+                            className={`px-6 py-3 rounded-full text-sm md:text-base font-bold transition-all duration-300 flex items-center gap-2 ${
+                                activeTab === 'team' 
+                                ? 'bg-white text-brand-green-dark shadow-lg transform scale-105' 
+                                : 'text-green-100 hover:bg-white/10'
+                            }`}
+                        >
+                            <UsersIcon className="w-4 h-4" /> Construção de Time
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Caminho 1: Venda Direta */}
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center text-center group">
-                    <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <ShoppingCartIcon className="w-10 h-10" />
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-800 mb-2">Vendas Diretas</h4>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                        Construa sua renda revendendo os produtos Brotos da Terra diretamente para seus clientes. 
-                        Compre com desconto exclusivo e lucre na revenda.
-                    </p>
-                    <div className="mt-auto w-full">
-                        <div className="bg-green-50 text-green-800 px-4 py-2 rounded-lg font-bold text-sm inline-block">
-                            Foco: Lucro Imediato
-                        </div>
+            {/* Content Section */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                {/* Main Info */}
+                <div className="md:col-span-8">
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 h-full relative overflow-hidden">
+                        
+                        {activeTab === 'sales' ? (
+                            <div className="animate-fade-in">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-12 h-12 bg-green-100 text-green-700 rounded-xl flex items-center justify-center">
+                                        <BanknotesIcon className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-gray-800 font-serif">Caminho da Venda</h3>
+                                        <p className="text-green-600 font-bold text-sm">Lucro imediato e autonomia</p>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                    Ideal para quem busca renda extra rápida ou quer fazer da venda de produtos sua atividade principal. 
+                                    Aqui, o resultado depende exclusivamente do seu esforço diário.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> 100% de Lucro</h4>
+                                        <p className="text-xs text-gray-500">Compre no atacado e revenda com margem cheia. Dinheiro rápido no bolso.</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Zero Chefes</h4>
+                                        <p className="text-xs text-gray-500">Você define seus horários, suas rotas e sua estratégia de abordagem.</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Produto Validado</h4>
+                                        <p className="text-xs text-gray-500">Alta aceitação no mercado, facilitando a conversão de vendas.</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-green-500 w-5 h-5" /> Material de Apoio</h4>
+                                        <p className="text-xs text-gray-500">Acesso ao nosso acervo de posts e scripts prontos para vender.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="animate-fade-in">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center">
+                                        <TrendingUpIcon className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-gray-800 font-serif">Caminho da Liderança</h3>
+                                        <p className="text-blue-600 font-bold text-sm">Escala, renda passiva e propósito</p>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-gray-600 mb-8 leading-relaxed">
+                                    Ideal para quem tem perfil empreendedor e deseja multiplicar seus ganhos ajudando outras pessoas a crescerem. 
+                                    Torne-se um distribuidor e lidere sua própria organização.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Renda Passiva</h4>
+                                        <p className="text-xs text-gray-500">Ganhe uma porcentagem sobre a produtividade de toda a sua equipe.</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Sem Limites</h4>
+                                        <p className="text-xs text-gray-500">Não há teto de ganhos. Quanto maior seu time, maior seu faturamento.</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Reconhecimento</h4>
+                                        <p className="text-xs text-gray-500">Prêmios exclusivos e destaque no ranking nacional de líderes.</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                                        <h4 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><CheckCircleIcon className="text-blue-500 w-5 h-5" /> Impacto</h4>
+                                        <p className="text-xs text-gray-500">Transforme a vida de outras pessoas oferecendo uma oportunidade real.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Caminho 2: Construção de Time */}
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center text-center group">
-                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <UsersIcon className="w-10 h-10" />
+                {/* Sidebar Action */}
+                <div className="md:col-span-4 space-y-6">
+                    <div className={`rounded-3xl p-6 text-white shadow-lg transition-colors duration-500 ${activeTab === 'sales' ? 'bg-brand-green-dark' : 'bg-blue-600'}`}>
+                        <h4 className="font-bold text-xl mb-2 font-serif">
+                            {activeTab === 'sales' ? 'Comece a Lucrar' : 'Comece a Liderar'}
+                        </h4>
+                        <p className="text-white/80 text-sm mb-6">
+                            {activeTab === 'sales' 
+                            ? 'Faça seu pedido agora e garanta seu estoque para começar as vendas.' 
+                            : 'Convide seu primeiro consultor e dê o primeiro passo na sua liderança.'}
+                        </p>
+                        
+                        <button 
+                            onClick={activeTab === 'sales' ? onRequestOrder : onRequestInvite}
+                            className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-sm flex items-center justify-center gap-2"
+                        >
+                            {activeTab === 'sales' ? <><ShoppingCartIcon /> Fazer Pedido</> : <><PlusIcon /> Convidar Agora</>}
+                        </button>
                     </div>
-                    <h4 className="text-xl font-bold text-gray-800 mb-2">Construção de Time</h4>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                        Amplie seus ganhos indicando novos consultores. 
-                        Torne-se um líder e receba benefícios baseados na produtividade da sua equipe.
-                    </p>
-                    <div className="mt-auto w-full">
-                        <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg font-bold text-sm inline-block">
-                            Foco: Renda Passiva & Carreira
+
+                    <div className="bg-yellow-50 border border-yellow-100 rounded-3xl p-6">
+                        <div className="flex items-start gap-3">
+                            <SparklesIcon className="text-yellow-600 w-6 h-6 shrink-0" />
+                            <div>
+                                <h4 className="font-bold text-yellow-800 text-sm mb-1">Dica de Sucesso</h4>
+                                <p className="text-xs text-yellow-700 leading-relaxed">
+                                    Você não precisa escolher apenas um! Os maiores líderes da Brotos começaram com vendas fortes e naturalmente atraíram pessoas para o negócio pelo seu exemplo.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1600,8 +1708,13 @@ const DashboardShell: React.FC = () => {
                     </div>
                 )}
                 
-                {/* Business Model Tab (NOVO) */}
-                {activeTab === 'business' && <BusinessModelScreen />}
+                {/* Business Model Tab (NOVO - Atualizado) */}
+                {activeTab === 'business' && (
+                    <BusinessModelScreen 
+                        onRequestInvite={() => {setIsInviteOpen(true); setIsSidebarOpen(false);}}
+                        onRequestOrder={() => {setIsOrderOpen(true); setIsSidebarOpen(false);}}
+                    />
+                )}
 
                 {/* Team Tab */}
                 {activeTab === 'team' && (
