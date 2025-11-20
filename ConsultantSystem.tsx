@@ -641,7 +641,7 @@ Aguardo dados PIX para pagamento.`;
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="bg-brand-green-dark p-4 flex justify-between items-center text-white shadow-md shrink-0">
                     <h3 className="text-lg font-bold flex items-center gap-2"><ShoppingCartIcon /> Novo Pedido</h3>
-                    <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1 transition"><CloseIcon /></button>
+                    <button onClick={onClose} className="hover:bg-white/20 rounded-full p-1 transition"><CloseIcon className="h-6 w-6 text-white" /></button>
                 </div>
                 
                 <div className="p-6 overflow-y-auto">
@@ -809,7 +809,7 @@ const DashboardShell: React.FC = () => {
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
                         className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                     >
-                        <MenuIcon />
+                        <MenuIcon className="h-8 w-8 text-white" />
                     </button>
                     <div className="h-10 w-auto bg-white rounded-lg px-2 py-1 flex items-center justify-center">
                         <BrandLogo className="h-8 w-auto" />
@@ -835,7 +835,7 @@ const DashboardShell: React.FC = () => {
                     onClick={() => setIsSidebarOpen(false)} 
                     className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
-                    <CloseIcon />
+                    <CloseIcon className="h-8 w-8 text-white" />
                 </button>
 
                 <div className="p-6 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
