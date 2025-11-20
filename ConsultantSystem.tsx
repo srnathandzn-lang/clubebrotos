@@ -9,7 +9,8 @@ import {
   PackageIcon, TruckIcon, TrendingUpIcon,
   BanknotesIcon, PresentationChartLineIcon, CalendarIcon, MenuIcon,
   QrCodeIcon, DocumentDuplicateIcon, CheckCircleIcon, CreditCardIcon,
-  PhotoIcon, DownloadIcon, ClipboardCopyIcon, TrashIcon
+  PhotoIcon, DownloadIcon, ClipboardCopyIcon, TrashIcon,
+  HandshakeIcon, TargetIcon
 } from './components/Icons';
 
 // --- InfinitePay Config ---
@@ -150,6 +151,64 @@ const EarningsSimulator: React.FC = () => {
                                 ~{salesNeededPerDay}
                             </span>
                             <span className="text-xs text-gray-500 font-medium">pomadas / dia</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- Componente: Modelo de Negócio (NOVO) ---
+const BusinessModelScreen: React.FC = () => {
+    return (
+        <div className="max-w-5xl mx-auto animate-fade-in">
+            {/* Cabeçalho idêntico ao EarningsSimulator para consistência visual */}
+            <div className="bg-brand-green-dark rounded-3xl p-8 text-white relative overflow-hidden shadow-lg mb-8">
+                <div className="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
+                    <HandshakeIcon className="h-32 w-32" />
+                </div>
+                <h3 className="font-serif text-2xl md:text-3xl font-bold mb-3 leading-tight relative z-10">
+                    Faça seu negócio do seu jeito
+                </h3>
+                <p className="text-green-100 text-sm md:text-base opacity-90 max-w-2xl relative z-10">
+                    Você pode construir seu negócio do seu jeito.
+                    Escolha como quer atuar: apenas com vendas diretas ou construindo também o seu próprio time.
+                    Você define onde vai atuar, quanto tempo vai dedicar e quanto quer ganhar.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Caminho 1: Venda Direta */}
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center text-center group">
+                    <div className="w-20 h-20 bg-green-50 text-green-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <ShoppingCartIcon className="w-10 h-10" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-800 mb-2">Vendas Diretas</h4>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                        Construa sua renda revendendo os produtos Brotos da Terra diretamente para seus clientes. 
+                        Compre com desconto exclusivo e lucre na revenda.
+                    </p>
+                    <div className="mt-auto w-full">
+                        <div className="bg-green-50 text-green-800 px-4 py-2 rounded-lg font-bold text-sm inline-block">
+                            Foco: Lucro Imediato
+                        </div>
+                    </div>
+                </div>
+
+                {/* Caminho 2: Construção de Time */}
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col items-center text-center group">
+                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                        <UsersIcon className="w-10 h-10" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-800 mb-2">Construção de Time</h4>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                        Amplie seus ganhos indicando novos consultores. 
+                        Torne-se um líder e receba benefícios baseados na produtividade da sua equipe.
+                    </p>
+                    <div className="mt-auto w-full">
+                        <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg font-bold text-sm inline-block">
+                            Foco: Renda Passiva & Carreira
                         </div>
                     </div>
                 </div>
@@ -1195,7 +1254,7 @@ Aguardo dados PIX para pagamento.`;
 
 const DashboardShell: React.FC = () => {
     const { user, stats, signOut, consultants } = useConsultant();
-    const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'materials'>('home');
+    const [activeTab, setActiveTab] = useState<'home' | 'team' | 'shop' | 'materials' | 'business'>('home');
     const [isOrderOpen, setIsOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -1307,6 +1366,12 @@ const DashboardShell: React.FC = () => {
                     <button onClick={() => handleNav('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'home' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
                         <ChartBarIcon /> Visão Geral
                     </button>
+
+                    {!isAdmin && (
+                        <button onClick={() => handleNav('business')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'business' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
+                            <HandshakeIcon /> Modelo de Negócio
+                        </button>
+                    )}
                     
                     {/* O Admin também pode ver os materiais para editar */}
                     <button onClick={() => handleNav('materials')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'materials' ? 'bg-white text-brand-green-dark font-bold shadow-md' : 'hover:bg-white/10'}`}>
@@ -1534,6 +1599,9 @@ const DashboardShell: React.FC = () => {
                         )}
                     </div>
                 )}
+                
+                {/* Business Model Tab (NOVO) */}
+                {activeTab === 'business' && <BusinessModelScreen />}
 
                 {/* Team Tab */}
                 {activeTab === 'team' && (
