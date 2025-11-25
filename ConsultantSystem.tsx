@@ -59,12 +59,12 @@ const FloatingThemeToggle = () => {
     return (
         <button 
             onClick={toggleTheme} 
-            className="fixed top-6 right-6 z-[60] p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 dark:border-gray-700 text-gray-800 dark:text-white shadow-xl hover:scale-110 transition-all duration-300 group"
+            className="fixed top-6 right-6 z-[60] p-3 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-110 transition-all duration-300 group"
             title="Alternar Tema"
         >
             {isDarkMode ? 
                 <SunIcon className="h-6 w-6 text-yellow-400 drop-shadow-lg" /> : 
-                <MoonIcon className="h-6 w-6 text-indigo-600 drop-shadow-lg" />
+                <MoonIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400 drop-shadow-lg" />
             }
         </button>
     );
@@ -172,7 +172,7 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=2727&auto=format&fit=crop')] bg-cover bg-center p-4 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-green-dark/90 via-brand-green-dark/80 to-black/80 backdrop-blur-sm"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-green-dark/95 via-brand-green-dark/80 to-black/80 backdrop-blur-sm"></div>
             <FloatingThemeToggle />
             
             <div className="bg-white/10 dark:bg-black/40 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-md w-full border border-white/20 relative z-10 animate-fade-in">
@@ -195,7 +195,7 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
                             <input 
                                 type="text" 
                                 placeholder="Seu ID de consultor"
-                                className="pl-11 block w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 focus:border-green-400 focus:ring-green-400/50 focus:bg-white/10 transition-all py-4"
+                                className="pl-11 block w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 focus:border-green-400 focus:ring-green-400/50 focus:bg-white/10 transition-all py-4 font-medium"
                                 value={id}
                                 onChange={(e) => setId(e.target.value)}
                                 required
@@ -212,7 +212,7 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
                             <input 
                                 type="password" 
                                 placeholder="••••••••"
-                                className="pl-11 block w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 focus:border-green-400 focus:ring-green-400/50 focus:bg-white/10 transition-all py-4"
+                                className="pl-11 block w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 focus:border-green-400 focus:ring-green-400/50 focus:bg-white/10 transition-all py-4 font-medium"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -380,32 +380,32 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
                 <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input 
                         name="name" type="text" placeholder="Nome Completo"
-                        className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
                     <input 
                         name="email" type="email" placeholder="E-mail"
-                        className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
                     <input 
                         name="whatsapp" type="text" placeholder="WhatsApp"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
                     <input 
                         name="sponsorId" type="text" placeholder="ID Patrocinador"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange}
                     />
                     <input 
                         name="password" type="password" placeholder="Senha"
-                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
                     <input 
                         name="confirmPassword" type="password" placeholder="Confirmar"
-                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/30 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
 
@@ -458,13 +458,13 @@ const PublicStoreScreen = ({ consultantId }: { consultantId: string }) => {
         }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-brand-dark-bg text-gray-500">Carregando loja...</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-brand-dark-bg text-gray-500">Carregando loja...</div>;
     if (error || !consultant) return <div className="min-h-screen flex items-center justify-center text-red-500">Loja não encontrada. Verifique o link.</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-brand-dark-bg font-sans transition-colors duration-500">
+        <div className="min-h-screen bg-slate-50 dark:bg-brand-dark-bg font-sans transition-colors duration-500">
              <FloatingThemeToggle />
-             <div className="bg-brand-green-dark text-white pt-20 pb-32 px-6 text-center relative overflow-hidden">
+             <div className="bg-brand-green-dark text-white pt-20 pb-32 px-6 text-center relative overflow-hidden shadow-2xl">
                  <div className="absolute inset-0 opacity-10 pointer-events-none">
                     <LeafIcon />
                  </div>
@@ -476,39 +476,40 @@ const PublicStoreScreen = ({ consultantId }: { consultantId: string }) => {
              </div>
 
              <div className="max-w-5xl mx-auto px-6 -mt-24 pb-12 relative z-20">
-                 <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 animate-slide-up">
+                 <div className="bg-white dark:bg-brand-dark-card rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-700 animate-slide-up">
                      <div className="md:flex items-stretch">
-                         <div className="md:w-1/2 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 flex items-center justify-center p-12">
-                             <PackageIcon className="w-64 h-64 text-brand-green-dark dark:text-green-400 drop-shadow-2xl animate-float" />
+                         <div className="md:w-1/2 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 flex items-center justify-center p-12 relative overflow-hidden">
+                             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
+                             <PackageIcon className="w-64 h-64 text-brand-green-dark dark:text-green-400 drop-shadow-2xl animate-float relative z-10" />
                          </div>
                          <div className="md:w-1/2 p-10 flex flex-col justify-center">
                              <div className="inline-block bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider w-fit mb-4">
                                  Bestseller
                              </div>
                              <h2 className="text-4xl font-serif font-bold text-gray-900 dark:text-white mb-4">Pomada Copaíba</h2>
-                             <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed text-lg">
+                             <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed text-lg">
                                  Alívio imediato e natural para dores musculares. A força pura da natureza concentrada para o seu bem-estar diário.
                              </p>
                              
                              <div className="flex items-end gap-4 mb-10">
                                  <span className="text-5xl font-bold text-brand-green-dark dark:text-green-400">R$ 35,00</span>
-                                 <span className="text-xl text-gray-400 line-through mb-2">R$ 50,00</span>
+                                 <span className="text-xl text-gray-400 line-through mb-2 font-medium">R$ 50,00</span>
                              </div>
 
                              <button 
                                 onClick={handleBuy}
-                                className="w-full bg-brand-green-mid hover:bg-green-500 text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-green-500/30 transform hover:-translate-y-1"
+                                className="w-full bg-brand-green-mid hover:bg-green-500 text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/30 transform hover:-translate-y-1"
                              >
                                 <WhatsAppIcon /> Comprar via WhatsApp
                              </button>
-                             <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-400">
-                                 <CheckCircleIcon className="h-4 w-4" /> Compra segura e direta com o consultor
+                             <div className="flex items-center justify-center gap-2 mt-6 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                 <CheckCircleIcon className="h-4 w-4 text-green-500" /> Compra segura e direta com o consultor
                              </div>
                          </div>
                      </div>
                  </div>
 
-                 <div className="mt-16 text-center text-gray-400 dark:text-gray-600 text-sm">
+                 <div className="mt-16 text-center text-gray-500 dark:text-gray-600 text-sm font-medium">
                      <p className="mb-1">Brotos da Terra - Distribuição e Representação</p>
                      <p>Consultor Autorizado ID: {consultant.id}</p>
                  </div>
@@ -529,7 +530,7 @@ const InviteModal = ({ onClose, user }: { onClose: () => void, user: Consultant 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in">
-            <div className="bg-white dark:bg-brand-dark-card rounded-3xl w-full max-w-md p-8 shadow-2xl border border-white/10">
+            <div className="bg-white dark:bg-brand-dark-card rounded-3xl w-full max-w-md p-8 shadow-2xl border border-gray-100 dark:border-white/10">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">Convidar Consultor</h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"><CloseIcon className="h-6 w-6 text-gray-500" /></button>
@@ -540,10 +541,10 @@ const InviteModal = ({ onClose, user }: { onClose: () => void, user: Consultant 
                     <p className="text-green-800 dark:text-green-300 font-medium">Expanda sua rede e ganhe bônus!</p>
                 </div>
 
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 font-medium">Link de Indicação</p>
+                <p className="text-sm text-gray-700 dark:text-gray-400 mb-2 font-bold uppercase tracking-wide text-xs">Link de Indicação</p>
                 <div className="flex gap-2 mb-6">
-                    <input readOnly value={inviteLink} className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-600 dark:text-gray-300 focus:outline-none" />
-                    <button onClick={copyLink} className="bg-brand-green-dark text-white px-6 rounded-xl font-bold hover:bg-brand-green-mid transition-colors">
+                    <input readOnly value={inviteLink} className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-700 dark:text-gray-300 focus:outline-none font-medium" />
+                    <button onClick={copyLink} className="bg-brand-green-dark text-white px-6 rounded-xl font-bold hover:bg-brand-green-mid transition-colors shadow-lg">
                         Copiar
                     </button>
                 </div>
@@ -563,7 +564,7 @@ const BusinessModelSection = ({ onRequestInvite, onRequestOrder }: { onRequestIn
     const [activeTab, setActiveTab] = useState<'sales' | 'leadership'>('sales');
 
     return (
-        <div className="bg-[#052e16] dark:bg-black rounded-[2.5rem] p-10 shadow-xl border border-green-900/30 relative overflow-hidden mb-10 text-white group">
+        <div className="bg-[#052e16] dark:bg-black rounded-[2.5rem] p-10 shadow-2xl border border-green-900/30 relative overflow-hidden mb-10 text-white group">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700">
                 <PackageIcon className="w-80 h-80 text-white" />
@@ -664,7 +665,7 @@ const EarningsSimulator = () => {
     }
 
     return (
-        <div className="bg-white dark:bg-brand-dark-card rounded-[2.5rem] p-10 shadow-xl border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+        <div className="bg-white dark:bg-brand-dark-card rounded-[2.5rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-200 dark:border-gray-700 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
             
             <div className="relative z-10">
@@ -675,18 +676,18 @@ const EarningsSimulator = () => {
                     <h3 className="text-2xl font-serif font-bold text-gray-900 dark:text-white">Simulador de Ganhos</h3>
                 </div>
                 
-                <p className="text-gray-500 dark:text-gray-400 mb-10 max-w-2xl text-lg">
+                <p className="text-gray-600 dark:text-gray-400 mb-10 max-w-2xl text-lg leading-relaxed">
                     Visualize o potencial do seu esforço. Pequenas metas diárias constroem grandes resultados mensais.
                 </p>
 
                 {/* Cards Interativos */}
                 <div className="grid md:grid-cols-3 gap-6 mb-12">
                     {[2, 5, 10].map((units) => (
-                        <div key={units} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500 transition-all hover:shadow-lg group cursor-default">
-                            <p className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-2">Meta Diária</p>
+                        <div key={units} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500 transition-all hover:shadow-xl hover:bg-white dark:hover:bg-gray-750 group cursor-default">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Meta Diária</p>
                             <p className="text-gray-800 dark:text-white mb-4 text-lg">Vender <strong className="text-brand-green-mid">{units}</strong> pomadas</p>
-                            <div className="h-px bg-gray-200 dark:bg-gray-700 w-full mb-4"></div>
-                            <p className="text-sm text-gray-400 mb-1">Ganho Mensal Estimado</p>
+                            <div className="h-px bg-gray-200 dark:bg-gray-700 w-full mb-4 group-hover:bg-green-100 transition-colors"></div>
+                            <p className="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">Ganho Mensal Estimado</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white group-hover:text-brand-green-mid transition-colors">
                                 {formatCurrency(calculateEarnings(units))}
                             </p>
@@ -694,7 +695,7 @@ const EarningsSimulator = () => {
                     ))}
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-8 border border-gray-100 dark:border-gray-700">
+                <div className="bg-gray-50/50 dark:bg-gray-800/50 rounded-3xl p-8 border border-gray-100 dark:border-gray-700">
                     <p className="text-center font-bold text-gray-900 dark:text-white mb-8 text-xl">
                         Quanto você quer ganhar este mês?
                     </p>
@@ -703,8 +704,8 @@ const EarningsSimulator = () => {
                         <div className="flex justify-between items-end mb-6">
                             <span className="text-5xl font-bold text-brand-green-mid tracking-tight">{formatCurrency(goal)}</span>
                             <div className="text-right">
-                                <span className="block text-xs text-gray-400 uppercase tracking-widest font-bold mb-1">Sua Meta</span>
-                                <span className="text-xl font-bold text-gray-700 dark:text-white bg-white dark:bg-gray-700 px-4 py-1 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600">~{unitsPerDay} un/dia</span>
+                                <span className="block text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-2">Sua Meta</span>
+                                <span className="text-xl font-bold text-gray-700 dark:text-white bg-white dark:bg-gray-700 px-6 py-2 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600">~{unitsPerDay} un/dia</span>
                             </div>
                         </div>
                         <input 
@@ -737,7 +738,7 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
     }
 
     return (
-        <div className="bg-white dark:bg-brand-dark-card rounded-[2.5rem] p-8 shadow-xl border border-gray-100 dark:border-gray-700 mt-10">
+        <div className="bg-white dark:bg-brand-dark-card rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-200 dark:border-gray-700 mt-10">
             <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
                     <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-xl text-blue-600 dark:text-blue-400">
@@ -751,7 +752,7 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
             </div>
 
             {team.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
+                <div className="text-center py-16 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-300 dark:border-gray-700">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                         <UsersIcon className="h-8 w-8" />
                     </div>
@@ -771,13 +772,13 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
                         </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-700">
+                    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
                         <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                            <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
                                 <tr>
-                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Consultor</th>
-                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Status Pedido</th>
-                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right">Contato</th>
+                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700">Consultor</th>
+                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700">Status Pedido</th>
+                                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs text-right border-b border-gray-200 dark:border-gray-700">Contato</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-brand-dark-card">
@@ -787,12 +788,12 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
                                         <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 font-bold">
+                                                    <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 font-bold border border-gray-200 dark:border-gray-600">
                                                         {member.name.charAt(0)}
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-gray-900 dark:text-white">{member.name}</p>
-                                                        <p className="text-xs text-gray-400">ID: {member.id}</p>
+                                                        <p className="text-xs text-gray-500">ID: {member.id}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -812,7 +813,7 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
                                             <td className="px-6 py-5 text-right">
                                                 <button 
                                                     onClick={() => handleContact(member.whatsapp)}
-                                                    className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:border-green-400 hover:text-green-600 px-4 py-2 rounded-xl transition-all shadow-sm text-xs font-bold uppercase tracking-wider"
+                                                    className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 hover:border-green-400 hover:text-green-600 px-4 py-2 rounded-xl transition-all shadow-sm text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300"
                                                 >
                                                     <ChatIcon className="h-4 w-4" /> Conversar
                                                 </button>
@@ -829,14 +830,7 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
     );
 }
 
-// ... (Rest of components: UniBrotosScreen, SocialMediaMaterialsScreen, MyBusinessManagementScreen, MyOrdersScreen, NewOrderScreen - Keeping functionality, updating only container styles if needed to match new design)
-
-// For brevity, applying generic "Nano Banana Pro" styling wrapper to other internal components. 
-// Assuming they inherit the main styles. I will ensure DashboardShell wraps them correctly.
-
 const UniBrotosScreen = ({ user }: { user: Consultant }) => {
-    // ... (Keep existing logic)
-    // Applying new styles to container
      const [videos, setVideos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [category, setCategory] = useState('all');
@@ -893,7 +887,7 @@ const UniBrotosScreen = ({ user }: { user: Consultant }) => {
                     </button>
                 )}
             </div>
-             {/* ... rest of UniBrotos with updated Tailwind classes ... */}
+             
              <div className="flex gap-3 overflow-x-auto pb-4">
                 {['all', 'sales', 'products', 'leadership'].map(cat => (
                     <button
@@ -902,7 +896,7 @@ const UniBrotosScreen = ({ user }: { user: Consultant }) => {
                         className={`px-6 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${
                             category === cat 
                             ? 'bg-brand-green-dark text-white border-brand-green-dark shadow-lg shadow-green-900/20' 
-                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 shadow-sm'
                         }`}
                     >
                         {cat === 'all' ? 'Todas as Aulas' : 
@@ -911,12 +905,12 @@ const UniBrotosScreen = ({ user }: { user: Consultant }) => {
                     </button>
                 ))}
             </div>
-             {/* ... Grid ... */}
+             
              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredVideos.map(video => {
                     const embedUrl = getYoutubeEmbed(video.video_url);
                     return (
-                        <div key={video.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 group">
+                        <div key={video.id} className="bg-white dark:bg-gray-800 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-200 dark:border-gray-700 group">
                             <div className="aspect-video bg-black relative">
                                 {embedUrl ? (
                                     <iframe 
@@ -937,20 +931,20 @@ const UniBrotosScreen = ({ user }: { user: Consultant }) => {
                     )
                 })}
              </div>
-             {/* ... Modal ... */}
+             
               {isAddOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
-                        <h3 className="text-xl font-bold mb-6 dark:text-white">Nova Aula</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl border border-gray-100">
+                        <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Nova Aula</h3>
                         <div className="space-y-4">
-                            <input className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Título da Aula" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} />
-                            <input className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Link do YouTube" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} />
-                            <select className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-green-500" value={newVideo.category} onChange={e => setNewVideo({...newVideo, category: e.target.value})}>
+                            <input className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Título da Aula" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} />
+                            <input className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Link do YouTube" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} />
+                            <select className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" value={newVideo.category} onChange={e => setNewVideo({...newVideo, category: e.target.value})}>
                                 <option value="sales">Vendas</option>
                                 <option value="products">Produtos</option>
                                 <option value="leadership">Liderança</option>
                             </select>
-                            <button onClick={handleAddVideo} className="w-full bg-brand-green-mid text-white py-4 rounded-xl font-bold hover:bg-green-500 transition-colors">Salvar Aula</button>
+                            <button onClick={handleAddVideo} className="w-full bg-brand-green-mid text-white py-4 rounded-xl font-bold hover:bg-green-500 transition-colors shadow-lg">Salvar Aula</button>
                             <button onClick={() => setIsAddOpen(false)} className="w-full text-gray-500 py-3 font-medium hover:text-gray-800">Cancelar</button>
                         </div>
                     </div>
@@ -961,12 +955,10 @@ const UniBrotosScreen = ({ user }: { user: Consultant }) => {
 };
 
 const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
-    // ... logic ...
      const [materials, setMaterials] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
 
-    // Admin state
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [newItem, setNewItem] = useState({ type: 'image', category: 'products', title: '', content: '', image_url: '' });
 
@@ -1025,7 +1017,7 @@ const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
                     <button 
                         key={f} 
                         onClick={() => setFilter(f)}
-                        className={`px-6 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${filter === f ? 'bg-brand-green-dark text-white border-brand-green-dark shadow-lg shadow-green-900/20' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
+                        className={`px-6 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all border ${filter === f ? 'bg-brand-green-dark text-white border-brand-green-dark shadow-lg shadow-green-900/20' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300 shadow-sm'}`}
                     >
                         {f === 'all' ? 'Todos' : f === 'products' ? 'Produtos' : f === 'company' ? 'Empresa' : f === 'texts' ? 'Textos Prontos' : 'Promoções'}
                     </button>
@@ -1034,37 +1026,37 @@ const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
 
             <div className="grid md:grid-cols-3 gap-8">
                 {filteredMaterials.map(item => (
-                    <div key={item.id} className="bg-white dark:bg-brand-dark-card rounded-[2rem] border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col h-full group">
+                    <div key={item.id} className="bg-white dark:bg-brand-dark-card rounded-[2rem] border border-gray-200 dark:border-gray-700 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col h-full group">
                         {item.type === 'image' ? (
                             <div className="aspect-square bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
                                 <img src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onError={(e) => {(e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400?text=Erro+Imagem'}} />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                    <a href={item.image_url} download target="_blank" className="bg-white text-gray-900 px-6 py-3 rounded-full font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                                    <a href={item.image_url} download target="_blank" className="bg-white text-gray-900 px-6 py-3 rounded-full font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform shadow-lg">
                                         <DownloadIcon className="h-5 w-5" /> Baixar
                                     </a>
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-8 bg-gray-50 dark:bg-gray-800/50 flex-1">
-                                <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl border border-gray-200 dark:border-gray-600 text-sm text-gray-600 dark:text-gray-300 italic h-full overflow-y-auto max-h-48 font-serif leading-relaxed">
+                            <div className="p-8 bg-gray-50/50 dark:bg-gray-800/50 flex-1">
+                                <div className="bg-white dark:bg-brand-dark-card p-6 rounded-2xl border border-gray-200 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 italic h-full overflow-y-auto max-h-48 font-serif leading-relaxed shadow-inner">
                                     "{item.content}"
                                 </div>
                             </div>
                         )}
                         
-                        <div className="p-6 border-t border-gray-50 dark:border-gray-700 flex justify-between items-center mt-auto">
+                        <div className="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center mt-auto">
                             <div>
                                 <h3 className="font-bold text-gray-900 dark:text-white text-base">{item.title}</h3>
                                 <span className="text-xs text-brand-green-mid uppercase font-bold tracking-wider">{item.category}</span>
                             </div>
                             <div className="flex gap-2">
                                 {item.type === 'text' && (
-                                    <button onClick={() => navigator.clipboard.writeText(item.content)} className="p-3 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors" title="Copiar Texto">
+                                    <button onClick={() => navigator.clipboard.writeText(item.content)} className="p-3 text-blue-600 bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-xl transition-colors" title="Copiar Texto">
                                         <ClipboardCopyIcon className="h-5 w-5" />
                                     </button>
                                 )}
                                 {user.role === 'admin' && (
-                                    <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-3 rounded-xl transition-colors">
+                                    <button onClick={() => handleDelete(item.id)} className="text-red-500 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 p-3 rounded-xl transition-colors">
                                         <CloseIcon className="h-5 w-5" />
                                     </button>
                                 )}
@@ -1073,30 +1065,29 @@ const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
                     </div>
                 ))}
             </div>
-            {/* Add Modal Logic (same as before but styled) */}
+            
              {isAddOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl">
-                         {/* ... modal content styled similar to others ... */}
-                         <h3 className="text-xl font-bold mb-6 dark:text-white">Adicionar Material</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-md shadow-2xl border border-gray-100">
+                         <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Adicionar Material</h3>
                          <div className="space-y-4">
-                            <select className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" value={newItem.type} onChange={e => setNewItem({...newItem, type: e.target.value})}>
+                            <select className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" value={newItem.type} onChange={e => setNewItem({...newItem, type: e.target.value})}>
                                 <option value="image">Imagem</option>
                                 <option value="text">Texto/Script</option>
                             </select>
-                            <select className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})}>
+                            <select className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})}>
                                 <option value="products">Produtos</option>
                                 <option value="company">Empresa</option>
                                 <option value="promo">Promoção</option>
                                 <option value="texts">Textos Prontos</option>
                             </select>
-                            <input className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" placeholder="Título" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} />
+                            <input className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Título" value={newItem.title} onChange={e => setNewItem({...newItem, title: e.target.value})} />
                             {newItem.type === 'image' ? (
-                                <input className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" placeholder="Link do Imgur" value={newItem.image_url} onChange={e => setNewItem({...newItem, image_url: e.target.value})} />
+                                <input className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Link do Imgur" value={newItem.image_url} onChange={e => setNewItem({...newItem, image_url: e.target.value})} />
                             ) : (
-                                <textarea className="w-full p-4 border rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" placeholder="Conteúdo" rows={4} value={newItem.content} onChange={e => setNewItem({...newItem, content: e.target.value})} />
+                                <textarea className="w-full p-4 border rounded-xl border-gray-200 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-green-500" placeholder="Conteúdo" rows={4} value={newItem.content} onChange={e => setNewItem({...newItem, content: e.target.value})} />
                             )}
-                            <button onClick={handleAddItem} className="w-full bg-brand-green-mid text-white py-4 rounded-xl font-bold hover:bg-green-500 transition-colors">Salvar</button>
+                            <button onClick={handleAddItem} className="w-full bg-brand-green-mid text-white py-4 rounded-xl font-bold hover:bg-green-500 transition-colors shadow-lg">Salvar</button>
                             <button onClick={() => setIsAddOpen(false)} className="w-full text-gray-500 py-3 font-medium hover:text-gray-800">Cancelar</button>
                          </div>
                     </div>
@@ -1107,8 +1098,6 @@ const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
 };
 
 const MyBusinessManagementScreen = ({ user }: { user: Consultant }) => {
-     // Reusing TeamPerformanceSection as requested for My Business (Network)
-     // In a real scenario, this would have more specific network management tools
      const myTeam: Consultant[] = [];
     return (
         <div className="animate-fade-in max-w-7xl mx-auto">
@@ -1124,7 +1113,6 @@ const MyBusinessManagementScreen = ({ user }: { user: Consultant }) => {
 };
 
 const MyOrdersScreen = ({ user }: { user: Consultant }) => {
-    // ... logic ...
     const [orders, setOrders] = useState<Sale[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -1151,14 +1139,14 @@ const MyOrdersScreen = ({ user }: { user: Consultant }) => {
                 Meus Pedidos
             </h2>
             
-            <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] border border-gray-100 dark:border-gray-700 overflow-hidden shadow-xl">
+            <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg shadow-gray-100 dark:shadow-none">
                  <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                         <tr>
-                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Data</th>
-                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Resumo</th>
-                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Status</th>
-                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right">Total</th>
+                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700">Data</th>
+                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700">Resumo</th>
+                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700">Status</th>
+                            <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right border-b border-gray-200 dark:border-gray-700">Total</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -1170,14 +1158,14 @@ const MyOrdersScreen = ({ user }: { user: Consultant }) => {
                                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                                          <ShoppingCartIcon className="h-8 w-8" />
                                      </div>
-                                     <p className="text-gray-900 dark:text-white font-medium">Nenhum pedido realizado</p>
+                                     <p className="text-gray-900 dark:text-white font-medium text-lg">Nenhum pedido realizado</p>
                                      <p className="text-gray-500 text-sm mt-1">Seus pedidos aparecerão aqui.</p>
                                  </td>
                              </tr>
                         ) : (
                             orders.map(order => (
                                 <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                    <td className="px-8 py-5 text-gray-600 dark:text-gray-400 font-medium">{new Date(order.created_at).toLocaleDateString()}</td>
+                                    <td className="px-8 py-5 text-gray-700 dark:text-gray-400 font-medium">{new Date(order.created_at).toLocaleDateString()}</td>
                                     <td className="px-8 py-5 font-bold text-gray-900 dark:text-white">{order.quantity} Caixas</td>
                                     <td className="px-8 py-5">
                                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-bold border border-green-200 dark:border-green-800">
@@ -1196,9 +1184,7 @@ const MyOrdersScreen = ({ user }: { user: Consultant }) => {
     );
 };
 
-// ... NewOrderScreen (Update classes for rounded corners and nicer inputs) ...
 const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consultant }) => {
-    // ... logic ...
     const [step, setStep] = useState(1);
     const [boxes, setBoxes] = useState(1);
     const [paymentMethod, setPaymentMethod] = useState<'whatsapp' | 'pix'>('whatsapp');
@@ -1216,16 +1202,13 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
         }
     }, [boxes]);
 
-    // InfinitePay Logic (Mock)
     const handleGeneratePix = async () => {
-        setStep(3); // Show Pix QR Code
-        // In real app, call API here
+        setStep(3); 
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in">
-            <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative border border-white/10">
-                {/* ... Toast ... */}
+            <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] relative border border-gray-200 dark:border-white/10">
                  {showFreeShippingToast && (
                     <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-xl z-50 animate-slide-up flex items-center gap-2 font-bold">
                         <SparklesIcon className="h-5 w-5 text-yellow-300" />
@@ -1233,7 +1216,6 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
                     </div>
                 )}
                 
-                {/* Header */}
                 <div className="bg-brand-green-dark p-6 flex justify-between items-center text-white">
                     <h3 className="font-serif font-bold text-xl flex items-center gap-3">
                         <ShoppingCartIcon className="h-6 w-6 opacity-80" /> Novo Pedido
@@ -1261,7 +1243,7 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
                             <div className="space-y-4">
                                 <label className="block font-bold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wider">Quantidade</label>
                                 <div className="flex items-center gap-6">
-                                    <button onClick={() => setBoxes(Math.max(1, boxes - 1))} className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-2xl font-bold transition-colors">-</button>
+                                    <button onClick={() => setBoxes(Math.max(1, boxes - 1))} className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-2xl font-bold transition-colors text-gray-600 dark:text-gray-300">-</button>
                                     <span className="text-4xl font-serif font-bold w-16 text-center text-gray-900 dark:text-white">{boxes}</span>
                                     <button onClick={() => setBoxes(boxes + 1)} className="w-14 h-14 rounded-2xl bg-brand-green-mid text-white hover:bg-green-500 flex items-center justify-center text-2xl font-bold transition-colors shadow-lg shadow-green-500/30">+</button>
                                 </div>
@@ -1280,11 +1262,11 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
                             )}
 
                             <div className="border-t border-gray-100 dark:border-gray-700 pt-6 space-y-3">
-                                <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                                <div className="flex justify-between text-gray-600 dark:text-gray-400 font-medium">
                                     <span>Subtotal</span>
                                     <span>{formatCurrency(total)}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                                <div className="flex justify-between text-gray-600 dark:text-gray-400 font-medium">
                                     <span>Frete</span>
                                     <span>{shipping === 0 ? <span className="text-green-500 font-bold">GRÁTIS</span> : formatCurrency(shipping)}</span>
                                 </div>
@@ -1302,39 +1284,37 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
                     
                     {step === 2 && (
                          <div className="space-y-8">
-                             {/* ... Payment options styled ... */}
                             <h4 className="font-serif font-bold text-2xl text-gray-900 dark:text-white text-center">Como deseja pagar?</h4>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button 
                                     onClick={() => setPaymentMethod('whatsapp')}
-                                    className={`p-6 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all ${paymentMethod === 'whatsapp' ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
+                                    className={`p-6 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all ${paymentMethod === 'whatsapp' ? 'border-green-500 bg-green-50 dark:bg-green-900/20 shadow-lg' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 bg-white dark:bg-transparent'}`}
                                 >
                                     <div className="bg-green-100 dark:bg-green-900/50 p-4 rounded-full"><HandshakeIcon className="h-8 w-8 text-green-600 dark:text-green-400" /></div>
                                     <span className="font-bold text-gray-900 dark:text-white">Negociar no WhatsApp</span>
                                 </button>
                                 <button 
                                     onClick={() => setPaymentMethod('pix')}
-                                    className={`p-6 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all ${paymentMethod === 'pix' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}
+                                    className={`p-6 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all ${paymentMethod === 'pix' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 bg-white dark:bg-transparent'}`}
                                 >
                                     <div className="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-full"><QrCodeIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" /></div>
                                     <span className="font-bold text-gray-900 dark:text-white">Pagar Agora (Pix)</span>
                                 </button>
                             </div>
 
-                            {/* Info text */}
                              {paymentMethod === 'whatsapp' ? (
-                                <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl text-sm text-gray-600 dark:text-gray-300 text-center">
+                                <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl text-sm text-gray-600 dark:text-gray-300 text-center border border-gray-100 dark:border-gray-700">
                                     Você será redirecionado para o WhatsApp da central para finalizar o pedido com um atendente humano.
                                 </div>
                             ) : (
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl text-sm text-blue-800 dark:text-blue-200 text-center">
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl text-sm text-blue-800 dark:text-blue-200 text-center border border-blue-100 dark:border-blue-800/30">
                                     Gera um QR Code Pix instantâneo para pagamento automático. Seu pedido é aprovado na hora.
                                 </div>
                             )}
 
                              <div className="flex gap-4 mt-8">
-                                <button onClick={() => setStep(1)} className="flex-1 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Voltar</button>
+                                <button onClick={() => setStep(1)} className="flex-1 py-4 border border-gray-200 dark:border-gray-700 rounded-2xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-600 dark:text-gray-300">Voltar</button>
                                 <button 
                                     onClick={() => paymentMethod === 'whatsapp' ? window.open(`https://wa.me/5511999999999?text=Olá, quero pedir ${boxes} caixas. ID: ${user.id}`, '_blank') : handleGeneratePix()} 
                                     className="flex-[2] py-4 bg-brand-green-mid text-white rounded-2xl font-bold shadow-xl shadow-green-500/20 hover:bg-green-500 transition-all"
@@ -1346,20 +1326,19 @@ const NewOrderScreen = ({ onClose, user }: { onClose: () => void, user: Consulta
                     )}
 
                     {step === 3 && (
-                        // ... Pix Step styled ...
                          <div className="text-center space-y-8">
                              <div className="mx-auto w-64 h-64 bg-white p-4 rounded-3xl shadow-xl flex items-center justify-center border border-gray-100">
                                  <QrCodeIcon className="h-56 w-56 text-gray-800" />
                              </div>
                              <div>
                                  <p className="font-serif font-bold text-4xl text-brand-green-dark dark:text-white">{formatCurrency(total + shipping)}</p>
-                                 <p className="text-gray-500 mt-2">Escaneie o QR Code ou copie o código abaixo</p>
+                                 <p className="text-gray-500 mt-2 font-medium">Escaneie o QR Code ou copie o código abaixo</p>
                              </div>
                              <div className="flex gap-3">
-                                 <input readOnly value="00020126580014BR.GOV.BCB.PIX0136..." className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 text-sm text-gray-500 font-mono" />
+                                 <input readOnly value="00020126580014BR.GOV.BCB.PIX0136..." className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 text-sm text-gray-600 dark:text-gray-300 font-mono font-medium" />
                                  <button className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-6 rounded-xl font-bold text-sm hover:bg-blue-200 transition-colors">Copiar</button>
                              </div>
-                             <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 underline">Fechar e Aguardar Confirmação</button>
+                             <button onClick={onClose} className="text-sm text-gray-400 hover:text-gray-600 underline font-medium">Fechar e Aguardar Confirmação</button>
                         </div>
                     )}
                 </div>
@@ -1374,8 +1353,6 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
     const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     
-    // Using the Floating Theme Toggle instead of header toggle for consistency
-    
     const myTeam: Consultant[] = []; 
 
     let displayRole = 'Consultor';
@@ -1389,20 +1366,20 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
             className={`w-full flex items-center space-x-4 px-6 py-4 rounded-2xl transition-all duration-300 group mb-1 ${
                 activeTab === id 
                 ? 'bg-brand-green-dark text-white font-bold shadow-lg shadow-green-900/20' 
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-brand-green-dark dark:hover:text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-brand-green-dark dark:hover:text-white font-medium'
             }`}
         >
-            <Icon className={`h-6 w-6 transition-colors ${activeTab === id ? 'text-white' : 'text-gray-400 group-hover:text-brand-green-dark dark:text-gray-500 dark:group-hover:text-white'}`} />
+            <Icon className={`h-6 w-6 transition-colors ${activeTab === id ? 'text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-brand-green-dark dark:group-hover:text-white'}`} />
             <span className="text-sm tracking-wide">{label}</span>
         </button>
     );
 
     return (
-        <div className="min-h-screen flex bg-gray-50 dark:bg-brand-dark-bg transition-colors duration-500 font-sans">
+        <div className="min-h-screen flex bg-slate-50 dark:bg-brand-dark-bg transition-colors duration-500 font-sans">
             <FloatingThemeToggle />
 
             {/* Sidebar (Desktop) */}
-            <aside className="hidden lg:flex flex-col w-80 bg-white dark:bg-brand-dark-card border-r border-gray-100 dark:border-gray-800 h-screen sticky top-0 z-30 shadow-2xl shadow-gray-200/50 dark:shadow-none overflow-y-auto">
+            <aside className="hidden lg:flex flex-col w-80 bg-white dark:bg-brand-dark-card border-r border-gray-200 dark:border-gray-800 h-screen sticky top-0 z-30 shadow-2xl shadow-gray-200/50 dark:shadow-none overflow-y-auto">
                 <div className="p-10 flex flex-col items-center">
                     <BrandLogo className="h-16 w-auto mb-6 drop-shadow-md" />
                     <div className="bg-green-50 dark:bg-green-900/30 text-brand-green-dark dark:text-green-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest text-center border border-green-100 dark:border-green-800">
@@ -1411,20 +1388,20 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                     <a 
                         href={`${window.location.origin}?store=${user.id}`}
                         target="_blank"
-                        className="mt-3 text-xs text-gray-400 hover:text-brand-green-mid flex items-center gap-1 transition-colors"
+                        className="mt-3 text-xs text-gray-500 hover:text-brand-green-mid flex items-center gap-1 transition-colors font-medium"
                     >
                         <StoreIcon className="h-3 w-3" /> Minha Loja Pública
                     </a>
                 </div>
                 
                 <div className="px-6 pb-6">
-                    <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 mb-8 flex items-center gap-4 border border-gray-100 dark:border-white/5">
+                    <div className="bg-white dark:bg-white/5 rounded-2xl p-4 mb-8 flex items-center gap-4 border border-gray-100 dark:border-white/5 shadow-sm dark:shadow-none">
                         <div className="h-12 w-12 rounded-xl bg-brand-earth flex items-center justify-center text-white font-serif font-bold text-xl shadow-lg shadow-orange-900/10">
                             {user.name.charAt(0)}
                         </div>
                         <div className="overflow-hidden">
                             <p className="font-bold text-gray-900 dark:text-white truncate text-sm">{user.name}</p>
-                            <p className="text-xs text-gray-400 truncate">ID: {user.id}</p>
+                            <p className="text-xs text-gray-500 truncate font-medium">ID: {user.id}</p>
                         </div>
                     </div>
 
@@ -1448,10 +1425,10 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
 
                          <button 
                             onClick={() => setIsInviteOpen(true)}
-                            className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-300"
+                            className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-300 font-medium"
                         >
                             <ShareIcon className="h-6 w-6 text-gray-400" />
-                            <span className="text-sm font-medium">Convidar Consultor</span>
+                            <span className="text-sm">Convidar Consultor</span>
                         </button>
 
                         {(user.role === 'admin' || myTeam.length > 0) && (
@@ -1461,7 +1438,7 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                 </div>
 
                 <div className="mt-auto p-6 border-t border-gray-100 dark:border-gray-800">
-                    <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-gray-400 hover:text-red-500 transition-colors text-sm font-bold py-2">
+                    <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-red-500 transition-colors text-sm font-bold py-2">
                         <LogoutIcon className="h-5 w-5" /> Sair
                     </button>
                 </div>
@@ -1470,15 +1447,14 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto scroll-smooth">
                 {/* Header Mobile */}
-                <header className="lg:hidden bg-white/80 dark:bg-brand-dark-card/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 sticky top-0 z-20 flex justify-between items-center">
+                <header className="lg:hidden bg-white/90 dark:bg-brand-dark-card/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 sticky top-0 z-20 flex justify-between items-center shadow-sm">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-gray-600 dark:text-white bg-gray-100 dark:bg-gray-800 rounded-xl">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-gray-700 dark:text-white bg-gray-100 dark:bg-gray-800 rounded-xl">
                             <MenuIcon />
                         </button>
                         <BrandLogo className="h-10 w-auto" />
                     </div>
-                    {/* Theme toggle is global now, so just Bell here */}
-                     <button className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-400 relative">
+                     <button className="p-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-500 relative">
                         <BellIcon />
                         <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
                     </button>
@@ -1494,11 +1470,11 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                                 <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full"><CloseIcon className="h-6 w-6 text-gray-500" /></button>
                             </div>
                             
-                            <div className="flex items-center gap-3 mb-8 bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl">
-                                <div className="h-10 w-10 rounded-full bg-brand-earth flex items-center justify-center text-white font-bold">{user.name.charAt(0)}</div>
+                            <div className="flex items-center gap-3 mb-8 bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                <div className="h-10 w-10 rounded-full bg-brand-earth flex items-center justify-center text-white font-bold shadow-md">{user.name.charAt(0)}</div>
                                 <div>
                                     <p className="font-bold text-gray-900 dark:text-white text-sm">{user.name}</p>
-                                    <p className="text-xs text-gray-500">ID: {user.id}</p>
+                                    <p className="text-xs text-gray-500 font-medium">ID: {user.id}</p>
                                 </div>
                             </div>
 
@@ -1522,10 +1498,10 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
 
                                  <button 
                                     onClick={() => { setIsInviteOpen(true); setIsMobileMenuOpen(false); }}
-                                    className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium"
                                 >
                                     <ShareIcon className="h-6 w-6 text-gray-400" />
-                                    <span className="font-medium">Convidar Consultor</span>
+                                    <span className="text-sm">Convidar Consultor</span>
                                 </button>
 
                                 {(user.role === 'admin' || myTeam.length > 0) && (
@@ -1533,7 +1509,7 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                                 )}
                             </nav>
                              <div className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-6">
-                                <button onClick={onLogout} className="flex items-center gap-2 text-gray-500 font-bold">
+                                <button onClick={onLogout} className="flex items-center gap-2 text-gray-500 font-bold hover:text-red-500 transition-colors">
                                     <LogoutIcon className="h-5 w-5" /> Sair
                                 </button>
                             </div>
@@ -1551,12 +1527,12 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                                     <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-green-dark dark:text-white mb-2">
                                         Olá, {user.name.split(' ')[0]}! <span className="inline-block animate-float">👋</span>
                                     </h1>
-                                    <p className="text-gray-500 dark:text-gray-400 text-lg">
+                                    <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
                                         Bem-vindo ao seu painel de controle <span className="font-serif font-bold italic text-brand-earth">Nano Pro</span>.
                                     </p>
                                 </div>
                                 <div className="hidden md:block">
-                                    <div className="bg-white dark:bg-brand-dark-card border border-gray-100 dark:border-gray-700 px-6 py-3 rounded-2xl shadow-sm text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                    <div className="bg-white dark:bg-brand-dark-card border border-gray-200 dark:border-gray-700 px-6 py-3 rounded-2xl shadow-sm text-sm text-gray-600 dark:text-gray-400 font-medium">
                                         {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                     </div>
                                 </div>
