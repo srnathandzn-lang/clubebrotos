@@ -50,6 +50,50 @@
         }
       }
     </script>
+    <style>
+      /* --- Premium Scrollbar Styles --- */
+      
+      /* Webkit (Chrome, Edge, Safari) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5); /* Gray-400 com transparência */
+        border-radius: 20px;
+        border: 2px solid transparent; /* Cria um efeito de padding */
+        background-clip: content-box;
+        transition: background-color 0.3s ease;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #10b981; /* brand-green-mid */
+      }
+
+      /* Dark Mode Overrides */
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: rgba(75, 85, 99, 0.6); /* Gray-600 com transparência */
+      }
+      
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #10b981;
+      }
+
+      /* Firefox */
+      html {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+      }
+      
+      html.dark {
+        scrollbar-color: rgba(75, 85, 99, 0.6) transparent;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {

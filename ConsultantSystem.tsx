@@ -41,7 +41,9 @@ import {
     ShareIcon,
     ChatIcon,
     StoreIcon,
-    WhatsAppIcon
+    WhatsAppIcon,
+    LocationIcon,
+    SearchIcon
 } from './components/Icons';
 import { Consultant, ConsultantStats, Sale, Notification, PrivateCustomer, PrivateSale } from './types';
 
@@ -97,7 +99,6 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [showAdminSetup, setShowAdminSetup] = useState(false);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -128,43 +129,6 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
 
         } catch (err: any) {
             setError(err.message || 'Erro ao acessar o sistema.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAdminSetup = async () => {
-        setLoading(true);
-        try {
-           const { data, error } = await supabase.auth.signUp({
-                email: 'admin@brotos.com',
-                password: 'jo1234',
-                options: {
-                    data: { full_name: 'Administrador Principal' }
-                }
-            });
-            
-            if (error) throw error;
-
-            if (data.user) {
-                 const { error: profileError } = await supabase
-                .from('consultants')
-                .insert([
-                    {
-                        id: '000000',
-                        auth_id: data.user.id,
-                        name: 'Administrador Brotos',
-                        email: 'admin@brotos.com',
-                        whatsapp: '00000000000',
-                        role: 'admin',
-                        address: 'Matriz'
-                    }
-                ]);
-                if (profileError) throw profileError;
-                alert("Admin criado! Use ID 000000 e senha jo1234");
-            }
-        } catch (err: any) {
-            alert("Erro ao criar admin: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -247,23 +211,6 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
                             Criar minha conta
                         </button>
                     </p>
-                    
-                    <button 
-                        onClick={() => setShowAdminSetup(!showAdminSetup)}
-                        className="text-xs text-white/30 hover:text-white/60 transition-colors"
-                    >
-                        Configurações
-                    </button>
-                    {showAdminSetup && (
-                        <div className="animate-fade-in">
-                        <button 
-                            onClick={handleAdminSetup}
-                            className="text-xs bg-white/10 px-3 py-1 rounded-full text-blue-200 hover:bg-white/20"
-                        >
-                            Inicializar Admin
-                        </button>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
@@ -273,8 +220,12 @@ const LoginScreen = ({ onLogin, onRegisterClick }: { onLogin: (user: Consultant)
 const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
     const [formData, setFormData] = useState({
         name: '',
+        document_id: '', // CPF
         email: '',
         whatsapp: '',
+        address: '', // Endereço Completo
+        zip_code: '', // CEP
+        reference_point: '', // Ponto de Referência
         password: '',
         confirmPassword: '',
         sponsorId: ''
@@ -283,6 +234,15 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [generatedId, setGeneratedId] = useState('');
+
+    useEffect(() => {
+        // Tenta pegar o ID do patrocinador da URL
+        const params = new URLSearchParams(window.location.search);
+        const sponsor = params.get('sponsor');
+        if (sponsor) {
+            setFormData(prev => ({ ...prev, sponsorId: sponsor }));
+        }
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -312,6 +272,10 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
 
             if (authData.user) {
                 const randomId = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                // Concatena endereço para salvar no banco (para compatibilidade com SQL existente)
+                const fullAddress = `${formData.address} - CEP: ${formData.zip_code} - Ref: ${formData.reference_point}`;
+
                 const { error: dbError } = await supabase
                     .from('consultants')
                     .insert([
@@ -319,8 +283,10 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
                             id: randomId,
                             auth_id: authData.user.id,
                             name: formData.name,
+                            document_id: formData.document_id,
                             email: formData.email,
                             whatsapp: formData.whatsapp,
+                            address: fullAddress,
                             role: 'consultant',
                             parent_id: formData.sponsorId || null
                         }
@@ -370,17 +336,33 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
              <div className="absolute inset-0 bg-brand-dark-bg/90 backdrop-blur-sm"></div>
              <FloatingThemeToggle />
              
-            <div className="bg-brand-dark-card/60 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-lg w-full border border-white/10 relative z-10 animate-slide-up">
-                <button onClick={onBackToLogin} className="mb-6 text-white/50 hover:text-white flex items-center gap-2 text-sm transition-colors">
+            <div className="bg-brand-dark-card/60 backdrop-blur-xl rounded-3xl shadow-2xl p-8 max-w-lg w-full border border-white/10 relative z-10 animate-slide-up max-h-[95vh] overflow-y-auto">
+                <button onClick={onBackToLogin} className="mb-6 text-white/50 hover:text-white flex items-center gap-2 text-sm transition-colors sticky top-0 bg-brand-dark-card/90 backdrop-blur z-20 w-full py-2">
                     ← Voltar para Login
                 </button>
                 <h2 className="text-3xl font-serif font-bold text-white mb-1">Criar Conta</h2>
-                <p className="text-white/60 mb-8 text-sm">Preencha seus dados para iniciar.</p>
+                <p className="text-white/60 mb-8 text-sm">Preencha seus dados para iniciar sua jornada.</p>
                 
                 <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    {/* Dados Pessoais */}
+                    <div className="col-span-2 text-xs font-bold text-green-300 uppercase tracking-widest mt-2 mb-1 border-b border-white/10 pb-1">
+                        Dados Pessoais
+                    </div>
+                    
                     <input 
                         name="name" type="text" placeholder="Nome Completo"
                         className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        onChange={handleChange} required
+                    />
+                    <input 
+                        name="document_id" type="text" placeholder="CPF"
+                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        onChange={handleChange} required
+                    />
+                     <input 
+                        name="whatsapp" type="text" placeholder="Telefone (WhatsApp)"
+                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
                     <input 
@@ -388,23 +370,47 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
                         className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
+
+                    {/* Endereço */}
+                    <div className="col-span-2 text-xs font-bold text-green-300 uppercase tracking-widest mt-4 mb-1 border-b border-white/10 pb-1">
+                        Endereço
+                    </div>
+
                     <input 
-                        name="whatsapp" type="text" placeholder="WhatsApp"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
-                        onChange={handleChange} required
-                    />
-                    <input 
-                        name="sponsorId" type="text" placeholder="ID Patrocinador"
-                        className="w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
-                        onChange={handleChange}
-                    />
-                    <input 
-                        name="password" type="password" placeholder="Senha"
+                        name="zip_code" type="text" placeholder="CEP"
                         className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
                     <input 
-                        name="confirmPassword" type="password" placeholder="Confirmar"
+                        name="address" type="text" placeholder="Endereço Completo"
+                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        onChange={handleChange} required
+                    />
+                    <input 
+                        name="reference_point" type="text" placeholder="Ponto de Referência"
+                        className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        onChange={handleChange}
+                    />
+
+                    {/* Acesso */}
+                    <div className="col-span-2 text-xs font-bold text-green-300 uppercase tracking-widest mt-4 mb-1 border-b border-white/10 pb-1">
+                        Acesso & Indicação
+                    </div>
+
+                    <input 
+                        name="sponsorId" type="text" placeholder="ID do Indicador (Opcional)"
+                        className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        onChange={handleChange}
+                        value={formData.sponsorId}
+                        readOnly={!!formData.sponsorId} // ReadOnly se veio da URL, mas pode ser editável se preferir
+                    />
+                    <input 
+                        name="password" type="password" placeholder="Crie uma Senha"
+                        className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
+                        onChange={handleChange} required
+                    />
+                    <input 
+                        name="confirmPassword" type="password" placeholder="Confirmar Senha"
                         className="col-span-2 md:col-span-1 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange} required
                     />
@@ -416,7 +422,7 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
                         disabled={loading}
                         className="col-span-2 w-full py-4 bg-brand-green-mid text-white rounded-xl hover:bg-green-500 transition-all font-bold shadow-lg shadow-green-900/50 mt-4"
                     >
-                        {loading ? 'Processando...' : 'Finalizar Cadastro'}
+                        {loading ? 'Processando Cadastro...' : 'Finalizar Cadastro'}
                     </button>
                 </form>
             </div>
