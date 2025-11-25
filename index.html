@@ -15,21 +15,22 @@
         theme: {
           extend: {
             colors: {
-              'brand-green-dark': '#1a3c1e', // Mais profundo para elegância
-              'brand-green-mid': '#2d572c',
-              'brand-green-light': '#e8f5e9',
-              'brand-earth': '#c5a37e',
-              'brand-dark-bg': '#0f172a', // Fundo modo escuro
-              'brand-dark-card': '#1e293b', // Cards modo escuro
-              'brand-text': '#374151',
+              'brand-green-dark': '#064e3b', // Esmeralda profundo
+              'brand-green-mid': '#10b981', // Esmeralda vibrante
+              'brand-green-light': '#ecfdf5', // Fundo menta suave
+              'brand-earth': '#d4a373', // Tom terra/dourado elegante
+              'brand-dark-bg': '#0f172a', // Slate profundo para fundo
+              'brand-dark-card': '#1e293b', // Slate para cards
+              'brand-text': '#111827', // Cinza quase preto
             },
             fontFamily: {
               'sans': ['Montserrat', 'sans-serif'],
               'serif': ['Lora', 'serif'],
             },
             animation: {
-              'fade-in': 'fadeIn 0.5s ease-out',
-              'slide-up': 'slideUp 0.5s ease-out',
+              'fade-in': 'fadeIn 0.6s ease-out',
+              'slide-up': 'slideUp 0.6s ease-out',
+              'float': 'float 6s ease-in-out infinite',
             },
             keyframes: {
               fadeIn: {
@@ -39,6 +40,10 @@
               slideUp: {
                 '0%': { transform: 'translateY(20px)', opacity: '0' },
                 '100%': { transform: 'translateY(0)', opacity: '1' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
               }
             }
           }
@@ -56,7 +61,7 @@
 }
 </script>
 </head>
-  <body class="bg-gray-50 dark:bg-brand-dark-bg transition-colors duration-300 text-brand-text dark:text-gray-200">
+  <body class="bg-gray-50 dark:bg-brand-dark-bg transition-colors duration-500 text-brand-text dark:text-gray-200 antialiased selection:bg-brand-green-mid selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
