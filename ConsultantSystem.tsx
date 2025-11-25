@@ -268,12 +268,9 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
                 }
             });
 
-            if (authError) throw authError;
-
             if (authData.user) {
                 const randomId = Math.floor(100000 + Math.random() * 900000).toString();
                 
-                // Concatena endereço para salvar no banco (para compatibilidade com SQL existente)
                 const fullAddress = `${formData.address} - CEP: ${formData.zip_code} - Ref: ${formData.reference_point}`;
 
                 const { error: dbError } = await supabase
@@ -402,7 +399,7 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
                         className="col-span-2 w-full rounded-xl border border-white/10 bg-white/5 text-white placeholder-white/50 p-4 focus:border-green-400 focus:bg-white/10 outline-none transition-all"
                         onChange={handleChange}
                         value={formData.sponsorId}
-                        readOnly={!!formData.sponsorId} // ReadOnly se veio da URL, mas pode ser editável se preferir
+                        readOnly={!!formData.sponsorId} 
                     />
                     <input 
                         name="password" type="password" placeholder="Crie uma Senha"
@@ -430,8 +427,7 @@ const RegisterScreen = ({ onBackToLogin }: { onBackToLogin: () => void }) => {
     );
 };
 
-// --- Public Store Component (For Customers) ---
-
+// --- Public Store Component ---
 const PublicStoreScreen = ({ consultantId }: { consultantId: string }) => {
     const [consultant, setConsultant] = useState<Consultant | null>(null);
     const [loading, setLoading] = useState(true);
@@ -524,7 +520,7 @@ const PublicStoreScreen = ({ consultantId }: { consultantId: string }) => {
     );
 };
 
-// --- Inner Dashboard Components (Refined) ---
+// --- Inner Dashboard Components ---
 
 const InviteModal = ({ onClose, user }: { onClose: () => void, user: Consultant }) => {
     const inviteLink = `${window.location.origin}?sponsor=${user.id}`;
@@ -571,7 +567,6 @@ const BusinessModelSection = ({ onRequestInvite, onRequestOrder }: { onRequestIn
 
     return (
         <div className="bg-[#052e16] dark:bg-black rounded-[2.5rem] p-10 shadow-2xl border border-green-900/30 relative overflow-hidden mb-10 text-white group">
-            {/* Background Decoration */}
             <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity duration-700">
                 <PackageIcon className="w-80 h-80 text-white" />
             </div>
@@ -686,7 +681,6 @@ const EarningsSimulator = () => {
                     Visualize o potencial do seu esforço. Pequenas metas diárias constroem grandes resultados mensais.
                 </p>
 
-                {/* Cards Interativos */}
                 <div className="grid md:grid-cols-3 gap-6 mb-12">
                     {[2, 5, 10].map((units) => (
                         <div key={units} className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500 transition-all hover:shadow-xl hover:bg-white dark:hover:bg-gray-750 group cursor-default">
@@ -744,7 +738,7 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
     }
 
     return (
-        <div className="bg-white dark:bg-brand-dark-card rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-200 dark:border-gray-700 mt-10">
+        <div className="bg-white dark:bg-brand-dark-card rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
                     <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-xl text-blue-600 dark:text-blue-400">
@@ -767,17 +761,6 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
                 </div>
             ) : (
                 <>
-                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-white mb-8 flex flex-col md:flex-row justify-between items-center shadow-lg shadow-blue-500/20">
-                        <div className="mb-4 md:mb-0">
-                            <p className="text-blue-100 text-sm font-medium uppercase tracking-wider mb-1">Bônus Estimado</p>
-                            <p className="text-4xl font-bold">{formatCurrency(bonus)}</p>
-                        </div>
-                        <div className="text-right bg-white/10 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/10">
-                            <p className="text-blue-100 text-xs uppercase font-bold mb-1">Volume de Vendas</p>
-                            <p className="text-2xl font-bold">{teamSales} <span className="text-sm font-normal text-blue-200">Caixas</span></p>
-                        </div>
-                    </div>
-
                     <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
@@ -834,6 +817,58 @@ const TeamPerformanceSection = ({ team }: { team: Consultant[] }) => {
             )}
         </div>
     );
+}
+
+const FinancialScreen = ({ team }: { team: Consultant[] }) => {
+    // Mock financial data (In production, fetch from sales table)
+    const teamSales = team.reduce((acc, member) => acc + (Math.random() > 0.5 ? 2 : 0), 0); 
+    const teamBonus = teamSales * 5; 
+    const personalProfit = 1500; // Mocked
+    const totalEarnings = personalProfit + teamBonus;
+
+    return (
+        <div className="animate-fade-in max-w-7xl mx-auto space-y-8">
+             <h2 className="text-3xl font-serif font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-3">
+                 <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
+                    <CurrencyDollarIcon className="h-8 w-8" />
+                 </div>
+                 Financeiro
+            </h2>
+
+            <div className="grid md:grid-cols-3 gap-6">
+                <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+                    <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-2">Lucro Pessoal (Mês)</p>
+                    <p className="text-4xl font-bold text-gray-900 dark:text-white">{formatCurrency(personalProfit)}</p>
+                    <div className="mt-4 text-xs text-green-600 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full w-fit">Baseado em suas vendas</div>
+                </div>
+
+                <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+                    <p className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-2">Bônus de Equipe</p>
+                    <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(teamBonus)}</p>
+                    <div className="mt-4 text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-full w-fit">{teamSales} Caixas vendidas pela rede</div>
+                </div>
+
+                 <div className="bg-brand-green-dark rounded-[2rem] p-8 shadow-xl border border-green-800 text-white relative overflow-hidden">
+                    <div className="absolute right-0 top-0 opacity-10">
+                        <BanknotesIcon className="h-32 w-32" />
+                    </div>
+                    <p className="text-sm text-green-200 font-bold uppercase tracking-wider mb-2 relative z-10">Total a Receber</p>
+                    <p className="text-4xl font-bold relative z-10">{formatCurrency(totalEarnings)}</p>
+                    <button className="mt-6 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-2 rounded-xl text-sm font-bold transition-colors relative z-10">
+                        Ver Extrato Completo
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-brand-dark-card rounded-[2rem] p-8 shadow-lg border border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Histórico de Transações</h3>
+                <div className="text-center py-12 text-gray-400">
+                    <ClipboardListIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>Nenhuma transação recente encontrada.</p>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 const UniBrotosScreen = ({ user }: { user: Consultant }) => {
@@ -1006,7 +1041,7 @@ const SocialMediaMaterialsScreen = ({ user }: { user: Consultant }) => {
                         <div className="bg-pink-100 dark:bg-pink-900/30 p-2 rounded-xl text-pink-600 dark:text-pink-400">
                              <PhotoIcon className="h-8 w-8" />
                         </div>
-                        Materiais
+                        Materiais de Apoio
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 mt-2 ml-14">Acervo de marketing para suas redes sociais.</p>
                 </div>
@@ -1366,6 +1401,8 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
     else if (user.role === 'leader') displayRole = 'Líder / Distribuidor';
     else if (myTeam.length > 0) displayRole = 'Distribuidor em Qualificação';
 
+    const isDistributor = user.role === 'admin' || user.role === 'leader' || myTeam.length > 0;
+
     const NavItem = ({ id, label, icon: Icon }: any) => (
         <button
             onClick={() => { setActiveTab(id); setIsMobileMenuOpen(false); }}
@@ -1413,7 +1450,7 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
 
                     <nav className="space-y-1">
                         <NavItem id="overview" label="Visão Geral" icon={ChartBarIcon} />
-                        <NavItem id="materials" label="Materiais" icon={PhotoIcon} />
+                        <NavItem id="materials" label="Materiais de Apoio" icon={PhotoIcon} />
                         <NavItem id="unibrotos" label="UniBrotos" icon={AcademicCapIcon} />
                         <NavItem id="my-orders" label="Meus Pedidos" icon={PackageIcon} />
                         
@@ -1425,20 +1462,25 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                             <span className="text-sm tracking-wide">Fazer Pedido</span>
                         </button>
 
+                        <div className="my-6 border-t border-gray-100 dark:border-white/5"></div>
+
                         <div className="px-6 pb-3 pt-2">
                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Expansão</p>
                         </div>
 
                          <button 
                             onClick={() => setIsInviteOpen(true)}
-                            className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-300 font-medium"
+                            className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-300 font-medium mb-1"
                         >
                             <ShareIcon className="h-6 w-6 text-gray-400" />
                             <span className="text-sm">Convidar Consultor</span>
                         </button>
 
-                        {(user.role === 'admin' || myTeam.length > 0) && (
-                             <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
+                        {isDistributor && (
+                            <>
+                                <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
+                                <NavItem id="financial" label="Financeiro" icon={BanknotesIcon} />
+                            </>
                         )}
                     </nav>
                 </div>
@@ -1486,7 +1528,7 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
 
                             <nav className="space-y-2">
                                 <NavItem id="overview" label="Visão Geral" icon={ChartBarIcon} />
-                                <NavItem id="materials" label="Materiais" icon={PhotoIcon} />
+                                <NavItem id="materials" label="Materiais de Apoio" icon={PhotoIcon} />
                                 <NavItem id="unibrotos" label="UniBrotos" icon={AcademicCapIcon} />
                                 <NavItem id="my-orders" label="Meus Pedidos" icon={PackageIcon} />
                                 
@@ -1498,20 +1540,25 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                                     <span>Fazer Pedido</span>
                                 </button>
 
-                                <div className="pt-6 pb-2">
-                                     <p className="px-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Expansão</p>
+                                <div className="my-6 border-t border-gray-100 dark:border-white/5"></div>
+
+                                <div className="px-6 pb-2">
+                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Expansão</p>
                                 </div>
 
                                  <button 
                                     onClick={() => { setIsInviteOpen(true); setIsMobileMenuOpen(false); }}
-                                    className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium"
+                                    className="w-full flex items-center space-x-4 px-6 py-4 rounded-2xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-all duration-300 font-medium mb-1"
                                 >
                                     <ShareIcon className="h-6 w-6 text-gray-400" />
                                     <span className="text-sm">Convidar Consultor</span>
                                 </button>
 
-                                {(user.role === 'admin' || myTeam.length > 0) && (
-                                    <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
+                                {isDistributor && (
+                                    <>
+                                        <NavItem id="business" label="Meu Negócio" icon={BriefcaseIcon} />
+                                        <NavItem id="financial" label="Financeiro" icon={BanknotesIcon} />
+                                    </>
                                 )}
                             </nav>
                              <div className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-6">
@@ -1560,6 +1607,8 @@ const DashboardShell = ({ user, onLogout }: { user: Consultant, onLogout: () => 
                     {activeTab === 'my-orders' && <MyOrdersScreen user={user} />}
 
                     {activeTab === 'business' && <MyBusinessManagementScreen user={user} />}
+                    
+                    {activeTab === 'financial' && <FinancialScreen team={myTeam} />}
                 </div>
             </main>
 
